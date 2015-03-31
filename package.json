@@ -1,6 +1,6 @@
 {
   "author": "Tommi Pisto <tommi@pis.to>",
-  "name": "pistonpoppler",
+  "name": "piston-poppler",
   "description": "Poppler node.js interface",
   "keywords": [
     "poppler"
@@ -8,7 +8,7 @@
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "git://github.com/tpisto/pistonpoppler.git"
+    "url": "git://github.com/tpisto/piston-poppler.git"
   },
   "scripts": {
     "install": "(node-gyp rebuild) || (exit 0)",
@@ -17,7 +17,7 @@
     "clean": "((node-gyp clean) && (rm -rf node_modules)) || (exit 0)",
     "build-debug": "(node-gyp configure --debug && node-gyp rebuild --debug) || (exit 0)"
   },
-  "main": "./lib/pistonpoppler.js",
+  "main": "./lib/piston-poppler.js",
   "engines": {
     "node": ">=0.8.0 <0.12.0"
   },

@@ -12,6 +12,9 @@ void InitAll(Handle<Object> exports) {
   exports->Set(NanNew<String>("readFields"),
     NanNew<FunctionTemplate>(ReadFields)->GetFunction());
 
+  exports->Set(NanNew<String>("writeFields"),
+    NanNew<FunctionTemplate>(WriteFields)->GetFunction());
+
 }
 
 NODE_MODULE(pistonpoppler, InitAll)

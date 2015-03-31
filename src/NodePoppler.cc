@@ -1,4 +1,5 @@
 #include <nan.h>
+#include <iostream>
 #include <poppler/qt4/poppler-form.h>
 #include <poppler/qt4/poppler-qt4.h>
 
@@ -10,7 +11,8 @@ using v8::Object;
 using v8::Local;
 using v8::Array;
 
-// Simple synchronous access to the `Estimate()` function
+
+// Read PDF form fields
 NAN_METHOD(ReadFields) {  
   NanScope();
 
@@ -52,4 +54,48 @@ NAN_METHOD(ReadFields) {
   }
 
   NanReturnValue(fieldArray);
+}
+
+// Write PDF form fields
+NAN_METHOD(WriteFields) {  
+  NanScope();
+  NanUtf8String *fileNameIn = new NanUtf8String(args[0]);
+  NanUtf8String *fileNameOut = new NanUtf8String(args[1]);
+  Local<Object> changeFields = args[2]->ToObject();
+
+  // Go throught properties
+  // Local<Array> properties = fields->GetOwnPropertyNames();
+  // for(int i = 0; i < properties->Length(); i++) {
+  //   std::cout << *v8::String::Utf8Value(properties->Get(i));
+  //   std::cout << *v8::String::Utf8Value(fields->Get(properties->Get(i)));
+  // }
+
+  // Poppler document !TODO! - proper error if file not found
+  Poppler::Document *document = Poppler::Document::load(**fileNameIn);
+
+  // Fill form
+  int n = document->numPages();
+
+  for (int i = 0; i < n; i += 1) {
+    Poppler::Page *page = document->page(i);
+
+    foreach(Poppler::FormField *field, page->formFields()) {
+      Local<String> name = NanNew<String>(field->fullyQualifiedName().toStdString());
+      
+      if (!field->isReadOnly() && field->isVisible() && changeFields->Has(name)) {
+        if (field->type() == Poppler::FormField::FormText) {
+          Poppler::FormFieldText *textField = (Poppler::FormFieldText *) field;
+          textField->setText(*v8::String::Utf8Value(changeFields->Get(name)));
+        }          
+      }
+    }
+  }
+
+  // Save file
+  Poppler::PDFConverter *converter = document->pdfConverter();
+  converter->setOutputFileName(**fileNameOut);
+  converter->setPDFOptions(converter->pdfOptions() | Poppler::PDFConverter::WithChanges);
+  if (!converter->convert()) {
+      // Error
+  }
 }

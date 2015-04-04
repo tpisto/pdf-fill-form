@@ -12,7 +12,7 @@
                 "src/NodePoppler.cc"
             ],
             "libraries": [
-                "<!@(pkg-config --libs poppler-qt4)"
+                "<!@(pkg-config --libs cairo poppler-qt4)"
             ],
             "cflags": [
                 "<!@(pkg-config --cflags poppler)"

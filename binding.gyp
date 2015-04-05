@@ -1,9 +1,4 @@
 {
-    "variables": {
-        "major_version": "<!(node -pe 'v=process.versions.node.split(\".\"); v[0];')",
-        "minor_version": "<!(node -pe 'v=process.versions.node.split(\".\"); v[1];')",
-        "micro_version": "<!(node -pe 'v=process.versions.node.split(\".\"); v[2];')"
-    },
     "targets": [
         {
             "target_name": "pdf_fill_form",
@@ -20,11 +15,6 @@
             ],
             "include_dirs" : [
                "<!(node -e \"require('nan')\")"
-            ],
-            "defines": [
-                "NODE_VERSION_MAJOR=<(major_version)",
-                "NODE_VERSION_MINOR=<(minor_version)",
-                "NODE_VERSION_MICRO=<(micro_version)"
             ],
             "xcode_settings": {
                 "OTHER_CFLAGS": [

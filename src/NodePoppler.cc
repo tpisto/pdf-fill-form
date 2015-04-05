@@ -22,10 +22,7 @@ using v8::String;
 using v8::Object;
 using v8::Local;
 using v8::Array;
-
-#define PAGE_WIDTH 595
-#define PAGE_HEIGHT 842
-#define BORDER 50
+using v8::Value;
 
 // Cairo write and read functions (to QBuffer)
 static cairo_status_t readPngFromBuffer(void *closure, unsigned char *data, unsigned int length) {
@@ -63,10 +60,10 @@ NAN_METHOD(ReadFields) {
   }
 
   Local<Array> fieldArray = NanNew<Array>();
+  int fieldNum = 0;
 
   for (int i = 0; i < n; i += 1) {
     Poppler::Page *page = document->page(i);
-    int fieldNum = 0;
     foreach (Poppler::FormField *field, page->formFields()) {
       
       if (!field->isReadOnly() && field->isVisible()) {
@@ -74,7 +71,7 @@ NAN_METHOD(ReadFields) {
         // Currently we only handle text fields - !TODO!
         if (field->type() == Poppler::FormField::FormText) {
 
-          // Ookay, we now make JavaScript object out of the fieldnames
+          // Make JavaScript object out of the fieldnames
           Local<Object> obj = NanNew<Object>();
           obj->Set(NanNew<String>("name"), NanNew<String>(field->fullyQualifiedName().toStdString()));
           obj->Set(NanNew<String>("value"), NanNew<String>(((Poppler::FormFieldText *)field)->text().toStdString()));
@@ -91,17 +88,73 @@ NAN_METHOD(ReadFields) {
   NanReturnValue(fieldArray);
 }
 
+void createPdf(QBuffer *buffer, Poppler::Document *document) {
+  
+  Poppler::PDFConverter *converter = document->pdfConverter();
+  converter->setPDFOptions(converter->pdfOptions() | Poppler::PDFConverter::WithChanges);
+  converter->setOutputDevice(buffer);
+  if (!converter->convert()) {
+      // Error
+  }
+}
+
+void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
+
+  // Initialize Cairo writing surface, and since we have images at 360 DPI, we'll set scaling. Width and Height are set for A4 dimensions.
+  cairo_surface_t *surface = cairo_pdf_surface_create_for_stream(writePngToBuffer, buffer, 595.00, 842.00);
+  cairo_t *cr = cairo_create(surface);
+  cairo_scale(cr, 0.2, 0.2);
+
+  int n = document->numPages();
+  for (int i = 0; i < n; i += 1) {
+    Poppler::Page *page = document->page(i);
+
+    // Save the page as PNG image to buffer. (We could use QFile if we want to save images to files)
+    QBuffer *pageImage = new QBuffer();
+    pageImage->open(QIODevice::ReadWrite);
+    QImage img = page->renderToImage(360,360);
+    img.save(pageImage, "png");
+    pageImage->seek(0);  // Reading does not work if we don't reset the pointer
+
+    // Ookay, let's try to make new page out of the image
+    cairo_surface_t *drawImageSurface = cairo_image_surface_create_from_png_stream(readPngFromBuffer, pageImage);
+    cairo_set_source_surface(cr, drawImageSurface, 0, 0);
+    cairo_paint(cr);
+
+    // Create new page if multipage document
+    if (n > 0) {
+      cairo_surface_show_page(surface);
+      cr = cairo_create(surface);
+      cairo_scale(cr, 0.2, 0.2);
+    }
+  }
+
+  // Close Cairo
+  cairo_destroy(cr);
+  cairo_surface_finish(surface);
+  cairo_surface_destroy (surface);
+}
+
 // Write PDF form fields
 NAN_METHOD(WriteFields) {  
   NanScope();
 
-  cairo_surface_t *surface;
-  cairo_t *cr;
+  Local<Object> parameters;
+  string saveFormat = "imgpdf";
 
   NanUtf8String *fileNameIn = new NanUtf8String(args[0]);
   Local<Object> changeFields = args[1]->ToObject();
+  
+  // Check if any configuration parameters
+  if (args.Length() > 2) {
+    parameters = args[2]->ToObject();
+    Local<Value> saveParam = parameters->Get(NanNew<String>("save"));
+    if (!saveParam->IsUndefined()) {
+      saveFormat = *NanAsciiString(parameters->Get(NanNew<String>("save")));
+    }
+  } 
 
-  // Poppler template document !TODO! - proper error if file not found
+  // Poppler template document !TODO! - proper error if file not found!
   Poppler::Document *document = Poppler::Document::load(**fileNameIn);
 
   // Fill form
@@ -122,45 +175,18 @@ NAN_METHOD(WriteFields) {
     }
   }
 
-  // Save first page as image, we open buffer instead of QFile
-  QBuffer *pageImage = new QBuffer();
-  pageImage->open(QIODevice::ReadWrite);
-  Poppler::Page *page2 = document->page(0);
-  QImage img = page2->renderToImage(360,360);
-  img.save(pageImage, "png");
-  // Reading does not work if we don't reset the pointer
-  pageImage->seek(0);
+  // Now save and return the document
+  QBuffer *bufferDevice = new QBuffer();
+  bufferDevice->open(QIODevice::ReadWrite);
+  
+  // Get save parameters
+  if (saveFormat == "imgpdf") {
+    createImgPdf(bufferDevice, document);
+  } 
+  else { 
+    createPdf(bufferDevice, document);
+  }
 
-  // Ookay, let's try to make new document out of the image
-  // surface = cairo_pdf_surface_create("joo.pdf", 595.00, 842.00);  
-  QBuffer *cairoFinalPdf = new QBuffer();
-  cairoFinalPdf->open(QIODevice::ReadWrite);
-  surface = cairo_pdf_surface_create_for_stream(writePngToBuffer, cairoFinalPdf, 595.00, 842.00);
-  cr = cairo_create(surface);
-  cairo_scale(cr, 0.2, 0.2);
-
-  // Paint image
-  cairo_surface_t *imgPage1 = cairo_image_surface_create_from_png_stream(readPngFromBuffer, pageImage);
-  cairo_set_source_surface(cr, imgPage1, 0, 0);
-  cairo_paint(cr);
-
-  // cairo_surface_show_page(surface);
-  // cr = cairo_create(surface);
-
-  // Close Cairo
-  cairo_destroy(cr);
-  cairo_surface_finish(surface);
-  cairo_surface_destroy (surface);
-
-  // // Save file
-  // QBuffer *bufferDevice = new QBuffer();
-
-  // Poppler::PDFConverter *converter = document->pdfConverter();
-  // converter->setPDFOptions(converter->pdfOptions() | Poppler::PDFConverter::WithChanges);
-  // converter->setOutputDevice(bufferDevice);
-  // if (!converter->convert()) {
-  //     // Error
-  // }
-  Local<Object> returnPdf = NanNewBufferHandle(cairoFinalPdf->data().data(), cairoFinalPdf->size());  
+  Local<Object> returnPdf = NanNewBufferHandle(bufferDevice->data().data(), bufferDevice->size());  
   NanReturnValue(returnPdf);
 }

@@ -5,7 +5,7 @@
   "keywords": [
     "poppler"
   ],
-  "version": "0.0.3",
+  "version": "0.0.5",
   "repository": {
     "type": "git",
     "url": "git://github.com/tpisto/pdf-fill-form.git"

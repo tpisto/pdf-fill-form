@@ -7,8 +7,8 @@
 
 // class Poppler : public node::ObjectWrap {
 
-NAN_METHOD(ReadFields);
-NAN_METHOD(WriteFields);
+NAN_METHOD(ReadSync);
+NAN_METHOD(WriteSync);
 
 QBuffer *writePdfFields(std::string, std::string, std::map<std::string, std::string>);
 

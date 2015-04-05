@@ -6,10 +6,10 @@
     },
     "targets": [
         {
-            "target_name": "piston-poppler",
+            "target_name": "pdf_fill_form",
             "sources": [
+                "src/pdf-fill-form.cc",
                 "src/NodePopplerAsync.cc",
-                "src/PistonPoppler.cc",
                 "src/NodePoppler.cc"
             ],
             "libraries": [

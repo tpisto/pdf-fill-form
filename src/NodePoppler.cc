@@ -46,7 +46,7 @@ static cairo_status_t writePngToBuffer(void *closure, const unsigned char *data,
 }
 
 // Read PDF form fields
-NAN_METHOD(ReadFields) {  
+NAN_METHOD(ReadSync) {  
   NanScope();
 
   // expect a number as the first argument
@@ -137,7 +137,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
 }
 
 // Write PDF form fields
-NAN_METHOD(WriteFields) {  
+NAN_METHOD(WriteSync) {  
   NanScope();
 
   Local<Object> parameters;

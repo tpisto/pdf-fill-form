@@ -27,6 +27,26 @@ using v8::Array;
 #define PAGE_HEIGHT 842
 #define BORDER 50
 
+// Cairo write and read functions (to QBuffer)
+static cairo_status_t readPngFromBuffer(void *closure, unsigned char *data, unsigned int length) {
+  QBuffer *myBuffer = (QBuffer *)closure;
+  size_t bytes_read;
+  bytes_read = myBuffer->read((char *)data, length);
+  if (bytes_read != length)
+  return CAIRO_STATUS_READ_ERROR;
+
+  return CAIRO_STATUS_SUCCESS;
+}
+static cairo_status_t writePngToBuffer(void *closure, const unsigned char *data, unsigned int length) {
+  QBuffer *myBuffer = (QBuffer *)closure;
+  size_t bytes_wrote;
+  bytes_wrote = myBuffer->write((char *)data, length);
+  if (bytes_wrote != length)
+  return CAIRO_STATUS_READ_ERROR;
+
+  return CAIRO_STATUS_SUCCESS;
+}
+
 // Read PDF form fields
 NAN_METHOD(ReadFields) {  
   NanScope();
@@ -71,56 +91,6 @@ NAN_METHOD(ReadFields) {
   NanReturnValue(fieldArray);
 }
 
-void draw (cairo_t *cr, const char *text, int width, int height)
-{
-    char buf[100];
-
-    cairo_rectangle (cr, BORDER, BORDER, width - 2*BORDER, height - 2*BORDER);
-    cairo_set_line_width (cr, 2);
-    cairo_stroke (cr);
-
-    cairo_select_font_face (cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size (cr, 60);
-    cairo_move_to (cr, 200, height/3);
-    cairo_show_text (cr, text);
-
-    sprintf (buf, "Width: %d points      Height: %d points", width, height);
-    cairo_set_font_size (cr, 18);
-    cairo_move_to (cr, 120, height*2/3);
-    cairo_show_text (cr, buf);
-}
-
-static cairo_status_t myReadFunc(void *closure, unsigned char *data, unsigned int length) {
-  QBuffer *myBuffer = (QBuffer *)closure;
-  // memcpy(data, myBuffer->data().data(), length);
-  // memset(data, '-', length);
-  cout << myBuffer->size();
-  cout << myBuffer->pos();
-  cout << "yeah";
-  cout << length;
-  // 
-  size_t bytes_read;
-  bytes_read = myBuffer->read((char *)data, length);
-  printf("Decimals: %d %d\n", bytes_read, length);
-  if (bytes_read != length)
-  return CAIRO_STATUS_READ_ERROR;
-
-  return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-read_png_from_file (void *closure, unsigned char *data, unsigned int length)
-{
-    FILE *file = (FILE *)closure;
-    size_t bytes_read;
-
-    bytes_read = fread(data, 1, length, file);    
-    printf("Decimals: %d %d\n", bytes_read, length);
-    if (bytes_read != length) return CAIRO_STATUS_READ_ERROR;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 // Write PDF form fields
 NAN_METHOD(WriteFields) {  
   NanScope();
@@ -129,8 +99,7 @@ NAN_METHOD(WriteFields) {
   cairo_t *cr;
 
   NanUtf8String *fileNameIn = new NanUtf8String(args[0]);
-  NanUtf8String *fileNameOut = new NanUtf8String(args[1]);
-  Local<Object> changeFields = args[2]->ToObject();
+  Local<Object> changeFields = args[1]->ToObject();
 
   // Poppler template document !TODO! - proper error if file not found
   Poppler::Document *document = Poppler::Document::load(**fileNameIn);
@@ -163,12 +132,15 @@ NAN_METHOD(WriteFields) {
   pageImage->seek(0);
 
   // Ookay, let's try to make new document out of the image
-  surface = cairo_pdf_surface_create("joo.pdf", 595.00, 842.00);  
+  // surface = cairo_pdf_surface_create("joo.pdf", 595.00, 842.00);  
+  QBuffer *cairoFinalPdf = new QBuffer();
+  cairoFinalPdf->open(QIODevice::ReadWrite);
+  surface = cairo_pdf_surface_create_for_stream(writePngToBuffer, cairoFinalPdf, 595.00, 842.00);
   cr = cairo_create(surface);
-  cairo_scale(cr, 0.18, 0.18);
+  cairo_scale(cr, 0.2, 0.2);
 
   // Paint image
-  cairo_surface_t *imgPage1 = cairo_image_surface_create_from_png_stream(myReadFunc, pageImage);
+  cairo_surface_t *imgPage1 = cairo_image_surface_create_from_png_stream(readPngFromBuffer, pageImage);
   cairo_set_source_surface(cr, imgPage1, 0, 0);
   cairo_paint(cr);
 
@@ -189,6 +161,6 @@ NAN_METHOD(WriteFields) {
   // if (!converter->convert()) {
   //     // Error
   // }
-  // Local<Object> newPdf = NanNewBufferHandle(bufferDevice->data().data(), bufferDevice->size());  
-  // NanReturnValue(newPdf);
+  Local<Object> returnPdf = NanNewBufferHandle(cairoFinalPdf->data().data(), cairoFinalPdf->size());  
+  NanReturnValue(returnPdf);
 }

@@ -8,6 +8,7 @@
         {
             "target_name": "piston-poppler",
             "sources": [
+                "src/NodePopplerAsync.cc",
                 "src/PistonPoppler.cc",
                 "src/NodePoppler.cc"
             ],

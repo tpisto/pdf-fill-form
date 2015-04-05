@@ -1,6 +1,7 @@
 #include <nan.h>
 #include <iostream>
 #include <string>
+#include <map>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -141,8 +142,9 @@ NAN_METHOD(WriteFields) {
 
   Local<Object> parameters;
   string saveFormat = "imgpdf";
+  map<string, string> fields;
 
-  NanUtf8String *fileNameIn = new NanUtf8String(args[0]);
+  string sourcePdfFileName = *NanAsciiString(args[0]);
   Local<Object> changeFields = args[1]->ToObject();
   
   // Check if any configuration parameters
@@ -154,8 +156,25 @@ NAN_METHOD(WriteFields) {
     }
   } 
 
+  // Convert form fields to c++ map
+  Local<Array> fieldArray = changeFields->GetPropertyNames();
+  for (uint32_t i = 0; i < fieldArray->Length(); i += 1) {
+    Local<Value> name = fieldArray->Get(i);
+    Local<Value> value = changeFields->Get(name);
+    fields[std::string(*v8::String::Utf8Value(name))] = std::string(*v8::String::Utf8Value(value));
+  }
+
+  // Create and return PDF
+  QBuffer *buffer = writePdfFields(sourcePdfFileName, saveFormat, fields);
+  Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());  
+  NanReturnValue(returnPdf);  
+}
+
+// Pdf creator that is not dependent on V8 internals (safe at async?)
+QBuffer *writePdfFields(string sourcePdfFileName, string saveFormat, map<string, string> fields) {
+
   // Poppler template document !TODO! - proper error if file not found!
-  Poppler::Document *document = Poppler::Document::load(**fileNameIn);
+  Poppler::Document *document = Poppler::Document::load(QString::fromStdString(sourcePdfFileName));
 
   // Fill form
   int n = document->numPages();
@@ -164,12 +183,11 @@ NAN_METHOD(WriteFields) {
     Poppler::Page *page = document->page(i);
 
     foreach(Poppler::FormField *field, page->formFields()) {
-      Local<String> name = NanNew<String>(field->fullyQualifiedName().toStdString());
-      
-      if (!field->isReadOnly() && field->isVisible() && changeFields->Has(name)) {
+      string fieldName = field->fullyQualifiedName().toStdString();      
+      if (!field->isReadOnly() && field->isVisible() && fields.count(fieldName)) {
         if (field->type() == Poppler::FormField::FormText) {
           Poppler::FormFieldText *textField = (Poppler::FormFieldText *) field;
-          textField->setText(*v8::String::Utf8Value(changeFields->Get(name)));
+          textField->setText(QString::fromStdString(fields[fieldName]));
         }          
       }
     }
@@ -187,6 +205,6 @@ NAN_METHOD(WriteFields) {
     createPdf(bufferDevice, document);
   }
 
-  Local<Object> returnPdf = NanNewBufferHandle(bufferDevice->data().data(), bufferDevice->size());  
-  NanReturnValue(returnPdf);
+  return bufferDevice;
 }
+

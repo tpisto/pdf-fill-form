@@ -1,4 +1,4 @@
-var a = require('lib/piston-poppler.js');
+var a = require('lib/pdf-fill-form.js');
 var fs = require('fs');
 
 console.log(a.readFields('ilmo.pdf'));

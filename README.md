@@ -1,5 +1,7 @@
 <img src="http://res.cloudinary.com/tpisto/image/upload/v1428317033/pdf-fill-form-logo_rlfj7o.png" width="400"><br/>
 **pdf-fill-form** is Node.js native C++ library for filling PDF forms. Created PDF file is returned back as node.js Buffer object for further processing or saving. Library offers methods to return filled PDF also as PDF file where pages are converted to images.
+
+Libary uses internally Poppler QT4 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
 ##Examples
 To **read** all form fields:  
 
@@ -59,7 +61,9 @@ $ npm install pdf-fill-form
 $ sudo apt-get install libpoppler-qt4-dev libcairo2-dev
 $ npm install pdf-fill-form
 ```
-
+##Todo
+* Tests
+* Refactoring
 
 ##Authors
 - [Tommi Pisto](https://github.com/tpisto)

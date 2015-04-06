@@ -3,7 +3,8 @@
         {
             "target_name": "pdf_fill_form",
             "variables": {
-                "myNeededLibraries": 'cairo poppler-qt4'
+                "myLibraries": "cairo poppler-qt4",
+                "myIncludes": "QtCore"
             },            
             "sources": [
                 "src/pdf-fill-form.cc",
@@ -11,15 +12,15 @@
                 "src/NodePoppler.cc"
             ],
             "cflags": [
-                "<!@(pkg-config --cflags <(myNeededLibraries))"
+                "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"
             ],
             "xcode_settings": {
                 "OTHER_CFLAGS": [
-                    "<!@(pkg-config --cflags <(myNeededLibraries))"
+                    "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"
                 ]
             },
             "libraries": [
-                "<!@(pkg-config --libs <(myNeededLibraries))"
+                "<!@(pkg-config --libs <(myLibraries))"
             ],
             "include_dirs" : [
                "<!(node -e \"require('nan')\")"

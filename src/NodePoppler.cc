@@ -56,7 +56,7 @@ void createPdf(QBuffer *buffer, Poppler::Document *document) {
   converter->setPDFOptions(converter->pdfOptions() | Poppler::PDFConverter::WithChanges);
   converter->setOutputDevice(buffer);
   if (!converter->convert()) {
-      // Error
+    throw "Error occurred while trying to create form filled PDF";
   }
 }
 
@@ -89,6 +89,8 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
       cr = cairo_create(surface);
       cairo_scale(cr, 0.2, 0.2);
     }
+
+    pageImage->close();
   }
 
   // Close Cairo
@@ -130,8 +132,20 @@ WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
 // Pdf creator that is not dependent on V8 internals (safe at async?)
 QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
-  // Poppler template document !TODO! - proper error if file not found!
+  ostringstream ss;
+
+  // If source file does not exist, throw error and return false
+  if(!fileExists(params.sourcePdfFileName)) {
+     ss << "File \"" << params.sourcePdfFileName << "\" does not exist";
+     throw ss.str();
+  }
+
+  // Open document and return false and throw error if something goes wrong
   Poppler::Document *document = Poppler::Document::load(QString::fromStdString(params.sourcePdfFileName));
+  if (document == NULL) {
+    ss << "Error occurred when reading \"" << params.sourcePdfFileName << "\"";
+    throw ss.str();
+  }
 
   // Fill form
   int n = document->numPages();
@@ -178,7 +192,7 @@ NAN_METHOD(ReadSync) {
 
   // expect a number as the first argument
   NanUtf8String *fileName = new NanUtf8String(args[0]);
-   ostringstream ss;
+  ostringstream ss;
   int n = 0;
 
   // If file does not exist, throw error and return false
@@ -237,9 +251,17 @@ NAN_METHOD(WriteSync) {
   WriteFieldsParams params = v8ParamsToCpp(args);
   
   // Create and return pdf
-  QBuffer *buffer = writePdfFields(params);
-  Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());  
-  NanReturnValue(returnPdf);    
+  try 
+  {
+    QBuffer *buffer = writePdfFields(params);
+    Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());  
+    NanReturnValue(returnPdf);    
+  } 
+  catch (string error) 
+  {
+    NanThrowError(NanNew<String>(error));
+    NanReturnValue(NanNull());
+  } 
 }
 
 

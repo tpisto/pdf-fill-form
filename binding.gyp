@@ -12,10 +12,12 @@
                 "src/NodePoppler.cc"
             ],
             "cflags": [
+                "-fexceptions",
                 "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"
             ],
             "xcode_settings": {
                 "OTHER_CFLAGS": [
+                    "-fexceptions",
                     "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"
                 ]
             },

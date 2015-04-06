@@ -23,7 +23,14 @@ class PdfWriteWorker : public NanAsyncWorker {
     // here, so everything we need for input and output
     // should go on `this`.
     void Execute () {
-      buffer = writePdfFields(params);
+      try 
+      {
+        buffer = writePdfFields(params);
+      }
+      catch (string error) 
+      {
+        SetErrorMessage(error.c_str());
+      }
     }
 
     // Executed when the async work is complete
@@ -51,7 +58,7 @@ NAN_METHOD(WriteAsync) {
   WriteFieldsParams params = v8ParamsToCpp(args);
 
   NanCallback *callback = new NanCallback(args[3].As<Function>());
-  
+
   NanAsyncQueueWorker(new PdfWriteWorker(callback, params));
   NanReturnUndefined();
 }

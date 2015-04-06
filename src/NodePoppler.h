@@ -4,13 +4,23 @@
 #include <nan.h>
 #include <QtCore/QBuffer>
 #include <map>
+#include <string>
+
+using namespace std;
 
 // class Poppler : public node::ObjectWrap {
+struct WriteFieldsParams {
+  WriteFieldsParams(string a, string b, map<string,string> c) : sourcePdfFileName(a), saveFormat(b), fields(c){}
+  string sourcePdfFileName;
+  string saveFormat;
+  map<string, string> fields;
+};
 
 NAN_METHOD(ReadSync);
 NAN_METHOD(WriteSync);
 
-QBuffer *writePdfFields(std::string, std::string, std::map<std::string, std::string>);
+WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<v8::Value>& args);
+QBuffer *writePdfFields(WriteFieldsParams params);
 
 // }
 

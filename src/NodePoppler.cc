@@ -1,6 +1,7 @@
 #include <nan.h>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <map>
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,6 +26,10 @@ using v8::Local;
 using v8::Array;
 using v8::Value;
 
+inline bool fileExists (const std::string& name) {
+    return ( access( name.c_str(), F_OK ) != -1 );
+}
+
 // Cairo write and read functions (to QBuffer)
 static cairo_status_t readPngFromBuffer(void *closure, unsigned char *data, unsigned int length) {
   QBuffer *myBuffer = (QBuffer *)closure;
@@ -43,50 +48,6 @@ static cairo_status_t writePngToBuffer(void *closure, const unsigned char *data,
   return CAIRO_STATUS_READ_ERROR;
 
   return CAIRO_STATUS_SUCCESS;
-}
-
-// Read PDF form fields
-NAN_METHOD(ReadSync) {  
-  NanScope();
-
-  // expect a number as the first argument
-  NanUtf8String *fileName = new NanUtf8String(args[0]);
-  int n = 0;
-
-  // Poppler document !TODO! - proper error if file not found
-  Poppler::Document *document = Poppler::Document::load(**fileName);
-  if (document != NULL) {
-    // Get field list
-    n = document->numPages();
-  }
-
-  Local<Array> fieldArray = NanNew<Array>();
-  int fieldNum = 0;
-
-  for (int i = 0; i < n; i += 1) {
-    Poppler::Page *page = document->page(i);
-    foreach (Poppler::FormField *field, page->formFields()) {
-      
-      if (!field->isReadOnly() && field->isVisible()) {
-      
-        // Currently we only handle text fields - !TODO!
-        if (field->type() == Poppler::FormField::FormText) {
-
-          // Make JavaScript object out of the fieldnames
-          Local<Object> obj = NanNew<Object>();
-          obj->Set(NanNew<String>("name"), NanNew<String>(field->fullyQualifiedName().toStdString()));
-          obj->Set(NanNew<String>("value"), NanNew<String>(((Poppler::FormFieldText *)field)->text().toStdString()));
-          obj->Set(NanNew<String>("type"), NanNew<String>("text"));
-          obj->Set(NanNew<String>("page"), NanNew<Number>(i));
-
-          fieldArray->Set(fieldNum, obj);
-          fieldNum++;
-        }
-      }
-    }
-  }
-
-  NanReturnValue(fieldArray);
 }
 
 void createPdf(QBuffer *buffer, Poppler::Document *document) {
@@ -136,10 +97,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
   cairo_surface_destroy (surface);
 }
 
-// Write PDF form fields
-NAN_METHOD(WriteSync) {  
-  NanScope();
-
+WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
   Local<Object> parameters;
   string saveFormat = "imgpdf";
   map<string, string> fields;
@@ -165,16 +123,15 @@ NAN_METHOD(WriteSync) {
   }
 
   // Create and return PDF
-  QBuffer *buffer = writePdfFields(sourcePdfFileName, saveFormat, fields);
-  Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());  
-  NanReturnValue(returnPdf);  
+  struct WriteFieldsParams params(sourcePdfFileName, saveFormat, fields);
+  return params;
 }
 
 // Pdf creator that is not dependent on V8 internals (safe at async?)
-QBuffer *writePdfFields(string sourcePdfFileName, string saveFormat, map<string, string> fields) {
+QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
   // Poppler template document !TODO! - proper error if file not found!
-  Poppler::Document *document = Poppler::Document::load(QString::fromStdString(sourcePdfFileName));
+  Poppler::Document *document = Poppler::Document::load(QString::fromStdString(params.sourcePdfFileName));
 
   // Fill form
   int n = document->numPages();
@@ -184,10 +141,10 @@ QBuffer *writePdfFields(string sourcePdfFileName, string saveFormat, map<string,
 
     foreach(Poppler::FormField *field, page->formFields()) {
       string fieldName = field->fullyQualifiedName().toStdString();      
-      if (!field->isReadOnly() && field->isVisible() && fields.count(fieldName)) {
+      if (!field->isReadOnly() && field->isVisible() && params.fields.count(fieldName)) {
         if (field->type() == Poppler::FormField::FormText) {
           Poppler::FormFieldText *textField = (Poppler::FormFieldText *) field;
-          textField->setText(QString::fromStdString(fields[fieldName]));
+          textField->setText(QString::fromStdString(params.fields[fieldName]));
         }          
       }
     }
@@ -198,7 +155,7 @@ QBuffer *writePdfFields(string sourcePdfFileName, string saveFormat, map<string,
   bufferDevice->open(QIODevice::ReadWrite);
   
   // Get save parameters
-  if (saveFormat == "imgpdf") {
+  if (params.saveFormat == "imgpdf") {
     createImgPdf(bufferDevice, document);
   } 
   else { 
@@ -207,4 +164,82 @@ QBuffer *writePdfFields(string sourcePdfFileName, string saveFormat, map<string,
 
   return bufferDevice;
 }
+
+
+//***********************************
+// 
+// Node.js methods
+// 
+//***********************************
+
+// Read PDF form fields
+NAN_METHOD(ReadSync) {  
+  NanScope();
+
+  // expect a number as the first argument
+  NanUtf8String *fileName = new NanUtf8String(args[0]);
+   ostringstream ss;
+  int n = 0;
+
+  // If file does not exist, throw error and return false
+  if(!fileExists(**fileName)) {
+     ss << "File \"" << **fileName << "\" does not exist";
+     NanThrowError(NanNew<String>(ss.str()));
+     NanReturnValue(NanFalse());
+  }
+
+  // Open document and return false and throw error if something goes wrong
+  Poppler::Document *document = Poppler::Document::load(**fileName);
+  if (document != NULL) {
+    // Get field list
+    n = document->numPages();
+  } else {    
+     ss << "Error occurred when reading \"" << **fileName << "\"";
+    NanThrowError(NanNew<String>(ss.str()));
+    NanReturnValue(NanFalse());
+  }
+
+  // Store field value objects to v8 array
+  Local<Array> fieldArray = NanNew<Array>();
+  int fieldNum = 0;
+
+  for (int i = 0; i < n; i += 1) {
+    Poppler::Page *page = document->page(i);
+    foreach (Poppler::FormField *field, page->formFields()) {
+      
+      if (!field->isReadOnly() && field->isVisible()) {
+      
+        // Currently we only handle text fields - !TODO!
+        if (field->type() == Poppler::FormField::FormText) {
+
+          // Make JavaScript object out of the fieldnames
+          Local<Object> obj = NanNew<Object>();
+          obj->Set(NanNew<String>("name"), NanNew<String>(field->fullyQualifiedName().toStdString()));
+          obj->Set(NanNew<String>("value"), NanNew<String>(((Poppler::FormFieldText *)field)->text().toStdString()));
+          obj->Set(NanNew<String>("type"), NanNew<String>("text"));
+          obj->Set(NanNew<String>("page"), NanNew<Number>(i));
+
+          fieldArray->Set(fieldNum, obj);
+          fieldNum++;
+        }
+      }
+    }
+  }
+
+  NanReturnValue(fieldArray);
+}
+
+// Write PDF form fields
+NAN_METHOD(WriteSync) {  
+  NanScope();
+
+  // Check and return parameters given at JavaScript function call
+  WriteFieldsParams params = v8ParamsToCpp(args);
+  
+  // Create and return pdf
+  QBuffer *buffer = writePdfFields(params);
+  Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());  
+  NanReturnValue(returnPdf);    
+}
+
 

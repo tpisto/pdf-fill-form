@@ -158,7 +158,7 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
       if (!field->isReadOnly() && field->isVisible() && params.fields.count(fieldName)) {
         if (field->type() == Poppler::FormField::FormText) {
           Poppler::FormFieldText *textField = (Poppler::FormFieldText *) field;
-          textField->setText(QString::fromStdString(params.fields[fieldName]));
+          textField->setText(QString::fromUtf8(params.fields[fieldName].c_str()));
         }          
       }
     }

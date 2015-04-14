@@ -56,9 +56,23 @@ $ npm install pdf-fill-form
 > Homebrew users who get error regarding xcb-shm  
 > The fix is to add this to your bash profile / environment: export PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig
 
-###Linux (Ubuntu/Debian)
+###Linux - Ubuntu (trusty)
 ```
 $ sudo apt-get install libpoppler-qt4-dev libcairo2-dev
+$ npm install pdf-fill-form
+```
+###Linux - Debian (wheezy)
+We need newer Poppler library than the current in Wheezy distribution: 
+
+```
+$ sudo add-apt-repository "deb http://http.debian.net/debian wheezy-backports main"     
+$ sudo apt-get update
+```
+Then install packages
+
+```
+$ sudo apt-get install libcairo2-dev
+$ sudo apt-get -t wheezy-backports install libpoppler-qt4-dev 
 $ npm install pdf-fill-form
 ```
 ##Todo

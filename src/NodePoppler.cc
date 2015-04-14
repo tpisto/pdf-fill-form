@@ -56,12 +56,21 @@ static cairo_status_t writePngToBuffer(void *closure, const unsigned char *data,
 }
 
 void createPdf(QBuffer *buffer, Poppler::Document *document) {
-  
+  ostringstream ss;
+
   Poppler::PDFConverter *converter = document->pdfConverter();
   converter->setPDFOptions(converter->pdfOptions() | Poppler::PDFConverter::WithChanges);
   converter->setOutputDevice(buffer);
   if (!converter->convert()) {
-    throw "Error occurred while trying to create form filled PDF";
+    // enum Error
+    // {
+    //     NoError,
+    //     FileLockedError,
+    //     OpenOutputError,
+    //     NotSupportedInputFileError
+    // };    
+    ss << "Error occurred when converting PDF: " << converter->lastError();
+    throw ss.str();    
   }
 }
 

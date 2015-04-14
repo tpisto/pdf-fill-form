@@ -27,7 +27,12 @@ using v8::Array;
 using v8::Value;
 
 inline bool fileExists (const std::string& name) {
-    return ( access( name.c_str(), F_OK ) != -1 );
+  if (FILE *file = fopen(name.c_str(), "r")) {
+      fclose(file);
+      return true;
+  } else {
+      return false;
+  }   
 }
 
 // Cairo write and read functions (to QBuffer)

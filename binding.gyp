@@ -11,11 +11,13 @@
                 "src/NodePopplerAsync.cc",
                 "src/NodePoppler.cc"
             ],
+            'cflags!': [ '-fno-exceptions' ],
+            'cflags_cc!': [ '-fno-exceptions' ],
             "cflags": [
-                "-fexceptions",
                 "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"
             ],
             "xcode_settings": {
+                'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
                 "OTHER_CFLAGS": [
                     "-fexceptions",
                     "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"

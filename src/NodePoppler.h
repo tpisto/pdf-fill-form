@@ -8,7 +8,6 @@
 
 using namespace std;
 
-// class Poppler : public node::ObjectWrap {
 struct WriteFieldsParams {
   WriteFieldsParams(string a, string b, map<string,string> c) : sourcePdfFileName(a), saveFormat(b), fields(c){}
   string sourcePdfFileName;
@@ -24,4 +23,4 @@ QBuffer *writePdfFields(WriteFieldsParams params);
 
 // }
 
-#endif  // EPISTONPOPPLER_H_
+#endif  // PISTONPOPPLER_H_

@@ -25,14 +25,15 @@ using v8::Object;
 using v8::Local;
 using v8::Array;
 using v8::Value;
+using v8::Boolean;
 
 inline bool fileExists (const std::string& name) {
   if (FILE *file = fopen(name.c_str(), "r")) {
-      fclose(file);
-      return true;
+    fclose(file);
+    return true;
   } else {
-      return false;
-  }   
+    return false;
+  }
 }
 
 // Cairo write and read functions (to QBuffer)
@@ -41,7 +42,7 @@ static cairo_status_t readPngFromBuffer(void *closure, unsigned char *data, unsi
   size_t bytes_read;
   bytes_read = myBuffer->read((char *)data, length);
   if (bytes_read != length)
-  return CAIRO_STATUS_READ_ERROR;
+    return CAIRO_STATUS_READ_ERROR;
 
   return CAIRO_STATUS_SUCCESS;
 }
@@ -50,7 +51,7 @@ static cairo_status_t writePngToBuffer(void *closure, const unsigned char *data,
   size_t bytes_wrote;
   bytes_wrote = myBuffer->write((char *)data, length);
   if (bytes_wrote != length)
-  return CAIRO_STATUS_READ_ERROR;
+    return CAIRO_STATUS_READ_ERROR;
 
   return CAIRO_STATUS_SUCCESS;
 }
@@ -68,9 +69,9 @@ void createPdf(QBuffer *buffer, Poppler::Document *document) {
     //     FileLockedError,
     //     OpenOutputError,
     //     NotSupportedInputFileError
-    // };    
+    // };
     ss << "Error occurred when converting PDF: " << converter->lastError();
-    throw ss.str();    
+    throw ss.str();
   }
 }
 
@@ -88,7 +89,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
     // Save the page as PNG image to buffer. (We could use QFile if we want to save images to files)
     QBuffer *pageImage = new QBuffer();
     pageImage->open(QIODevice::ReadWrite);
-    QImage img = page->renderToImage(360,360);
+    QImage img = page->renderToImage(360, 360);
     img.save(pageImage, "png");
     pageImage->seek(0);  // Reading does not work if we don't reset the pointer
 
@@ -120,7 +121,7 @@ WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
 
   string sourcePdfFileName = *NanAsciiString(args[0]);
   Local<Object> changeFields = args[1]->ToObject();
-  
+
   // Check if any configuration parameters
   if (args.Length() > 2) {
     parameters = args[2]->ToObject();
@@ -128,7 +129,7 @@ WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
     if (!saveParam->IsUndefined()) {
       saveFormat = *NanAsciiString(parameters->Get(NanNew<String>("save")));
     }
-  } 
+  }
 
   // Convert form fields to c++ map
   Local<Array> fieldArray = changeFields->GetPropertyNames();
@@ -149,9 +150,9 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
   ostringstream ss;
 
   // If source file does not exist, throw error and return false
-  if(!fileExists(params.sourcePdfFileName)) {
-     ss << "File \"" << params.sourcePdfFileName << "\" does not exist";
-     throw ss.str();
+  if (!fileExists(params.sourcePdfFileName)) {
+    ss << "File \"" << params.sourcePdfFileName << "\" does not exist";
+    throw ss.str();
   }
 
   // Open document and return false and throw error if something goes wrong
@@ -167,13 +168,30 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
   for (int i = 0; i < n; i += 1) {
     Poppler::Page *page = document->page(i);
 
-    foreach(Poppler::FormField *field, page->formFields()) {
-      string fieldName = field->fullyQualifiedName().toStdString();      
+    foreach (Poppler::FormField *field, page->formFields()) {
+      string fieldName = field->fullyQualifiedName().toStdString();
       if (!field->isReadOnly() && field->isVisible() && params.fields.count(fieldName)) {
+
+        // Text
         if (field->type() == Poppler::FormField::FormText) {
           Poppler::FormFieldText *textField = (Poppler::FormFieldText *) field;
           textField->setText(QString::fromUtf8(params.fields[fieldName].c_str()));
-        }          
+        }
+
+        // Button
+        if (field->type() == Poppler::FormField::FormButton) {
+          Poppler::FormFieldButton *buttonField = (Poppler::FormFieldButton *) field;
+
+          // Checkbox !TODO! - enable also other types.  Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
+          if (buttonField->buttonType() == Poppler::FormFieldButton::CheckBox) {
+            if (params.fields[fieldName].compare("true") == 0) {
+              buttonField->setState(true);
+            }
+            else {
+              buttonField->setState(false);
+            }
+          }
+        }
       }
     }
   }
@@ -181,12 +199,12 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
   // Now save and return the document
   QBuffer *bufferDevice = new QBuffer();
   bufferDevice->open(QIODevice::ReadWrite);
-  
+
   // Get save parameters
   if (params.saveFormat == "imgpdf") {
     createImgPdf(bufferDevice, document);
-  } 
-  else { 
+  }
+  else {
     createPdf(bufferDevice, document);
   }
 
@@ -195,13 +213,13 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
 
 //***********************************
-// 
+//
 // Node.js methods
-// 
+//
 //***********************************
 
 // Read PDF form fields
-NAN_METHOD(ReadSync) {  
+NAN_METHOD(ReadSync) {
   NanScope();
 
   // expect a number as the first argument
@@ -210,10 +228,10 @@ NAN_METHOD(ReadSync) {
   int n = 0;
 
   // If file does not exist, throw error and return false
-  if(!fileExists(**fileName)) {
-     ss << "File \"" << **fileName << "\" does not exist";
-     NanThrowError(NanNew<String>(ss.str()));
-     NanReturnValue(NanFalse());
+  if (!fileExists(**fileName)) {
+    ss << "File \"" << **fileName << "\" does not exist";
+    NanThrowError(NanNew<String>(ss.str()));
+    NanReturnValue(NanFalse());
   }
 
   // Open document and return false and throw error if something goes wrong
@@ -221,8 +239,8 @@ NAN_METHOD(ReadSync) {
   if (document != NULL) {
     // Get field list
     n = document->numPages();
-  } else {    
-     ss << "Error occurred when reading \"" << **fileName << "\"";
+  } else {
+    ss << "Error occurred when reading \"" << **fileName << "\"";
     NanThrowError(NanNew<String>(ss.str()));
     NanReturnValue(NanFalse());
   }
@@ -234,22 +252,65 @@ NAN_METHOD(ReadSync) {
   for (int i = 0; i < n; i += 1) {
     Poppler::Page *page = document->page(i);
     foreach (Poppler::FormField *field, page->formFields()) {
-      
+
       if (!field->isReadOnly() && field->isVisible()) {
-      
-        // Currently we only handle text fields - !TODO!
-        if (field->type() == Poppler::FormField::FormText) {
 
-          // Make JavaScript object out of the fieldnames
-          Local<Object> obj = NanNew<Object>();
-          obj->Set(NanNew<String>("name"), NanNew<String>(field->fullyQualifiedName().toStdString()));
-          obj->Set(NanNew<String>("value"), NanNew<String>(((Poppler::FormFieldText *)field)->text().toStdString()));
-          obj->Set(NanNew<String>("type"), NanNew<String>("text"));
-          obj->Set(NanNew<String>("page"), NanNew<Number>(i));
+        // Make JavaScript object out of the fieldnames
+        Local<Object> obj = NanNew<Object>();
+        obj->Set(NanNew<String>("name"), NanNew<String>(field->fullyQualifiedName().toStdString()));
+        obj->Set(NanNew<String>("page"), NanNew<Number>(i));
 
-          fieldArray->Set(fieldNum, obj);
-          fieldNum++;
+        // ! TODO ! Now supports values only for "checkbox" and "text". Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
+        string fieldType;
+        // Set default value undefined
+        obj->Set(NanNew<String>("value"), NanUndefined());
+        Poppler::FormFieldButton *myButton;
+        Poppler::FormFieldChoice *myChoice;
+        
+        switch (field->type()) {
+          
+          // FormButton
+          case Poppler::FormField::FormButton:
+            myButton = (Poppler::FormFieldButton *)field;
+            switch (myButton->buttonType()) {
+              // Push
+              case Poppler::FormFieldButton::Push:        fieldType = "push_button";     break;
+              case Poppler::FormFieldButton::CheckBox:
+                fieldType = "checkbox";
+                obj->Set(NanNew<String>("value"), NanNew<Boolean>(myButton->state()));
+                break;
+              case Poppler::FormFieldButton::Radio:       fieldType = "radio";           break;
+            }
+            break;
+
+          // FormText
+          case Poppler::FormField::FormText:
+            obj->Set(NanNew<String>("value"), NanNew<String>(((Poppler::FormFieldText *)field)->text().toStdString()));
+            fieldType = "text";
+            break;
+
+          // FormChoice
+          case Poppler::FormField::FormChoice:
+            myChoice = (Poppler::FormFieldChoice *)field;
+            switch (myChoice->choiceType()) {
+              case Poppler::FormFieldChoice::ComboBox:    fieldType = "combobox";       break;
+              case Poppler::FormFieldChoice::ListBox:     fieldType = "listbox";        break;
+            }
+            break;
+
+          // FormSignature
+          case Poppler::FormField::FormSignature:         fieldType = "formsignature";  break;
+
+          default:
+            fieldType = "undefined";
+            break;
         }
+
+        obj->Set(NanNew<String>("type"), NanNew<String>(fieldType.c_str()));
+
+        fieldArray->Set(fieldNum, obj);
+        fieldNum++;
+
       }
     }
   }
@@ -258,24 +319,24 @@ NAN_METHOD(ReadSync) {
 }
 
 // Write PDF form fields
-NAN_METHOD(WriteSync) {  
+NAN_METHOD(WriteSync) {
   NanScope();
 
   // Check and return parameters given at JavaScript function call
   WriteFieldsParams params = v8ParamsToCpp(args);
-  
+
   // Create and return pdf
-  try 
+  try
   {
     QBuffer *buffer = writePdfFields(params);
-    Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());  
-    NanReturnValue(returnPdf);    
-  } 
-  catch (string error) 
+    Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());
+    NanReturnValue(returnPdf);
+  }
+  catch (string error)
   {
     NanThrowError(NanNew<String>(error));
     NanReturnValue(NanNull());
-  } 
+  }
 }
 
 

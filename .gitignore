@@ -20,3 +20,4 @@ psrc/
 *.pdf
 *.png
 test.js
+node_modules

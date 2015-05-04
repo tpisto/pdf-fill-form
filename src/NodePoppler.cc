@@ -148,7 +148,7 @@ WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
 QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
   ostringstream ss;
-
+ 
   // If source file does not exist, throw error and return false
   if (!fileExists(params.sourcePdfFileName)) {
     ss << "File \"" << params.sourcePdfFileName << "\" does not exist";
@@ -330,6 +330,8 @@ NAN_METHOD(WriteSync) {
   {
     QBuffer *buffer = writePdfFields(params);
     Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());
+    buffer->close();
+    delete buffer;
     NanReturnValue(returnPdf);
   }
   catch (string error)

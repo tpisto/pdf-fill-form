@@ -42,7 +42,8 @@ class PdfWriteWorker : public NanAsyncWorker {
           NanNull()
         , NanNewBufferHandle(buffer->data().data(), buffer->size())
       };
-
+      buffer->close();
+      delete buffer;
       callback->Call(2, argv);
     }
 
@@ -59,6 +60,7 @@ NAN_METHOD(WriteAsync) {
 
   NanCallback *callback = new NanCallback(args[3].As<Function>());
 
-  NanAsyncQueueWorker(new PdfWriteWorker(callback, params));
+  PdfWriteWorker *writeWorker = new PdfWriteWorker(callback, params);
+  NanAsyncQueueWorker(writeWorker);
   NanReturnUndefined();
 }

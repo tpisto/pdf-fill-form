@@ -84,7 +84,7 @@ Use parameter { "save": "imgpdf" }
 Preferable method to install library dependencies is via [Homebrew](http://brew.sh/)
 
 ```
-$ brew install cairo poppler
+$ brew install qt4 cairo poppler --with-qt4
 ```
 After dependencies are successfully installed, you can install the library:
 

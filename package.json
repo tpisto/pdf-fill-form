@@ -13,7 +13,7 @@
   "gypfile": true,
   "main": "./lib/pdf-fill-form.js",
   "engines": {
-    "node": ">=0.11.14"
+    "node": "0.10.36"
   },
   "dependencies": {
     "nan": "*"

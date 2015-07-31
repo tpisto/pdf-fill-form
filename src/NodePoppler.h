@@ -18,7 +18,8 @@ struct WriteFieldsParams {
 NAN_METHOD(ReadSync);
 NAN_METHOD(WriteSync);
 
-WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<v8::Value>& args);
+WriteFieldsParams v8ParamsToCpp(const v8::Arguments& args);
+
 QBuffer *writePdfFields(WriteFieldsParams params);
 
 // }

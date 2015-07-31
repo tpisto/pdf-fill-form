@@ -114,7 +114,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
   cairo_surface_destroy (surface);
 }
 
-WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
+WriteFieldsParams v8ParamsToCpp(const v8::Arguments& args) {
   Local<Object> parameters;
   string saveFormat = "imgpdf";
   map<string, string> fields;
@@ -148,7 +148,7 @@ WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
 QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
   ostringstream ss;
- 
+
   // If source file does not exist, throw error and return false
   if (!fileExists(params.sourcePdfFileName)) {
     ss << "File \"" << params.sourcePdfFileName << "\" does not exist";
@@ -266,9 +266,9 @@ NAN_METHOD(ReadSync) {
         obj->Set(NanNew<String>("value"), NanUndefined());
         Poppler::FormFieldButton *myButton;
         Poppler::FormFieldChoice *myChoice;
-        
+
         switch (field->type()) {
-          
+
           // FormButton
           case Poppler::FormField::FormButton:
             myButton = (Poppler::FormFieldButton *)field;

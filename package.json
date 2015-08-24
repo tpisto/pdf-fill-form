@@ -16,7 +16,7 @@
     "node": ">=0.11.14"
   },
   "dependencies": {
-    "nan": "*"
+    "nan": "~1.7.0"
   },
   "devDependencies": {},
   "optionalDependencies": {}

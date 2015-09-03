@@ -122,6 +122,7 @@ $ npm install pdf-fill-form
 - [Tommi Pisto](https://github.com/tpisto)
 
 ##Contibutors
+- Ethan Goldblum
 - Tyler Iguchi
 
 ## License

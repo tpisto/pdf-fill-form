@@ -148,7 +148,6 @@ WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
 QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
   ostringstream ss;
- 
   // If source file does not exist, throw error and return false
   if (!fileExists(params.sourcePdfFileName)) {
     ss << "File \"" << params.sourcePdfFileName << "\" does not exist";
@@ -164,32 +163,54 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
   // Fill form
   int n = document->numPages();
-
+  stringstream idSS;
   for (int i = 0; i < n; i += 1) {
     Poppler::Page *page = document->page(i);
 
     foreach (Poppler::FormField *field, page->formFields()) {
       string fieldName = field->fullyQualifiedName().toStdString();
-      if (!field->isReadOnly() && field->isVisible() && params.fields.count(fieldName)) {
-
+      // Support writing fields by both fieldName and id.
+      // If fieldName is not present in params, try id.
+      if (params.fields.count(fieldName) == 0) {
+        idSS << field->id();
+        fieldName = idSS.str();
+        idSS.str("");
+        idSS.clear();
+      }
+      if (!field->isReadOnly() && field->isVisible() && params.fields.count(fieldName) ) {
         // Text
         if (field->type() == Poppler::FormField::FormText) {
           Poppler::FormFieldText *textField = (Poppler::FormFieldText *) field;
           textField->setText(QString::fromUtf8(params.fields[fieldName].c_str()));
         }
 
+        // Choice
+        if (field->type() == Poppler::FormField::FormChoice) {
+          Poppler::FormFieldChoice *choiceField = (Poppler::FormFieldChoice *) field;
+          if (choiceField->isEditable()) {
+            choiceField->setEditChoice(QString::fromUtf8(params.fields[fieldName].c_str()));
+          }
+          else {
+            QStringList possibleChoices = choiceField->choices();
+            QString proposedChoice = QString::fromUtf8(params.fields[fieldName].c_str());
+            int index = possibleChoices.indexOf(proposedChoice);
+            if (index >= 0) {
+              QList<int> choiceList;
+              choiceList << index;
+              choiceField->setCurrentChoices(choiceList);
+            }
+          }
+        }
+
         // Button
+        // ! TODO ! Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
         if (field->type() == Poppler::FormField::FormButton) {
           Poppler::FormFieldButton *buttonField = (Poppler::FormFieldButton *) field;
-
-          // Checkbox !TODO! - enable also other types.  Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
-          if (buttonField->buttonType() == Poppler::FormFieldButton::CheckBox) {
-            if (params.fields[fieldName].compare("true") == 0) {
-              buttonField->setState(true);
-            }
-            else {
-              buttonField->setState(false);
-            }
+          if (params.fields[fieldName].compare("true") == 0) {
+            buttonField->setState(true);
+          }
+          else {
+            buttonField->setState(false);
           }
         }
       }
@@ -260,15 +281,16 @@ NAN_METHOD(ReadSync) {
         obj->Set(NanNew<String>("name"), NanNew<String>(field->fullyQualifiedName().toStdString()));
         obj->Set(NanNew<String>("page"), NanNew<Number>(i));
 
-        // ! TODO ! Now supports values only for "checkbox" and "text". Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
+        // ! TODO ! Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
         string fieldType;
         // Set default value undefined
         obj->Set(NanNew<String>("value"), NanUndefined());
         Poppler::FormFieldButton *myButton;
         Poppler::FormFieldChoice *myChoice;
-        
+
+        obj->Set(NanNew<String>("id"), NanNew<Number>(field->id()));
         switch (field->type()) {
-          
+
           // FormButton
           case Poppler::FormField::FormButton:
             myButton = (Poppler::FormFieldButton *)field;
@@ -290,13 +312,20 @@ NAN_METHOD(ReadSync) {
             break;
 
           // FormChoice
-          case Poppler::FormField::FormChoice:
+          case Poppler::FormField::FormChoice: {
+            Local<Array> choiceArray = NanNew<Array>();
             myChoice = (Poppler::FormFieldChoice *)field;
+            QStringList possibleChoices = myChoice->choices();
+            for (int i = 0; i < possibleChoices.size(); i++) {
+              choiceArray->Set(i, NanNew<String>(possibleChoices.at(i).toStdString()));
+            }
+            obj->Set(NanNew<String>("choices"), choiceArray);
             switch (myChoice->choiceType()) {
               case Poppler::FormFieldChoice::ComboBox:    fieldType = "combobox";       break;
               case Poppler::FormFieldChoice::ListBox:     fieldType = "listbox";        break;
             }
             break;
+          }
 
           // FormSignature
           case Poppler::FormField::FormSignature:         fieldType = "formsignature";  break;

@@ -19,6 +19,9 @@
             "xcode_settings": {
                 'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
                 "OTHER_CFLAGS": [
+                    '-mmacosx-version-min=10.7',
+                    '-std=c++11',
+                    '-stdlib=libc++',                
                     "-fexceptions",
                     "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"
                 ]
@@ -29,6 +32,8 @@
             "include_dirs" : [
                "<!(node -e \"require('nan')\")"
             ]
+
+
         }
     ]
 }

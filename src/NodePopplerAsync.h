@@ -6,11 +6,11 @@
  * MIT License <https://github.com/rvagg/nan/blob/master/LICENSE.md>
  ********************************************************************/
 
-#ifndef PISTONPOPPLER_ASYNC_H_
-#define PISTONPOPPLER_ASYNC_H_
+#ifndef NODEPOPPLER_ASYNC_H_
+#define NODEPOPPLER_ASYNC_H_
 
 #include <nan.h>
 
 NAN_METHOD(WriteAsync);
 
-#endif  // PISTONPOPPLER_ASYNC_H_
+#endif  // NODEPOPPLER_ASYNC_H_

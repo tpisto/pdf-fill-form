@@ -1,5 +1,5 @@
-#ifndef PISTONPOPPLER_H_
-#define PISTONPOPPLER_H_
+#ifndef NODEPOPPLER_H_
+#define NODEPOPPLER_H_
 
 #include <nan.h>
 #include <QtCore/QBuffer>
@@ -18,9 +18,9 @@ struct WriteFieldsParams {
 NAN_METHOD(ReadSync);
 NAN_METHOD(WriteSync);
 
-WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<v8::Value>& args);
+WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args);
 QBuffer *writePdfFields(WriteFieldsParams params);
 
 // }
 
-#endif  // PISTONPOPPLER_H_
+#endif  // NODEPOPPLER_H_

@@ -1,23 +1,20 @@
 #include <nan.h>
-#include "NodePoppler.h"   // NOLINT(build/include)
+#include "NodePoppler.h"        // NOLINT(build/include)
 #include "NodePopplerAsync.h"   // NOLINT(build/include)
 
 using v8::FunctionTemplate;
-using v8::Handle;
-using v8::Object;
-using v8::String;
 
 // Expose access to our function
-void InitAll(Handle<Object> exports) {
-  
-  exports->Set(NanNew<String>("readSync"),
-    NanNew<FunctionTemplate>(ReadSync)->GetFunction());
+NAN_MODULE_INIT(InitAll) {
 
-  exports->Set(NanNew<String>("writeSync"),
-    NanNew<FunctionTemplate>(WriteSync)->GetFunction());
+  Nan::Set(target, Nan::New("readSync").ToLocalChecked(),
+    Nan::GetFunction(Nan::New<FunctionTemplate>(ReadSync)).ToLocalChecked());
 
-  exports->Set(NanNew<String>("writeAsync"),
-    NanNew<FunctionTemplate>(WriteAsync)->GetFunction());
+  Nan::Set(target, Nan::New("writeSync").ToLocalChecked(),
+    Nan::GetFunction(Nan::New<FunctionTemplate>(WriteSync)).ToLocalChecked());
+
+  Nan::Set(target, Nan::New("writeAsync").ToLocalChecked(),
+    Nan::GetFunction(Nan::New<FunctionTemplate>(WriteAsync)).ToLocalChecked());
 
 }
 

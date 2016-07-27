@@ -3,9 +3,13 @@
   "name": "pdf-fill-form",
   "description": "Fill PDF forms and return rendered PDF in buffer. No temporary files created.",
   "keywords": [
-    "pdf", "forms", "poppler", "qt4", "cairo"
+    "pdf",
+    "forms",
+    "poppler",
+    "qt4",
+    "cairo"
   ],
-  "version": "1.1.0",
+  "version": "2.0.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/tpisto/pdf-fill-form.git"
@@ -13,10 +17,10 @@
   "gypfile": true,
   "main": "./lib/pdf-fill-form.js",
   "engines": {
-    "node": ">=0.11.14"
+    "node": ">4.4.0"
   },
   "dependencies": {
-    "nan": "~1.7.0"
+    "nan": "~2.4.0"
   },
   "devDependencies": {},
   "optionalDependencies": {}

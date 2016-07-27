@@ -21,8 +21,8 @@
 using namespace std;
 using v8::Number;
 using v8::String;
-using v8::Object;
 using v8::Local;
+using v8::Object;
 using v8::Array;
 using v8::Value;
 using v8::Boolean;
@@ -114,20 +114,24 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
   cairo_surface_destroy (surface);
 }
 
-WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
+WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args) {
   Local<Object> parameters;
   string saveFormat = "imgpdf";
   map<string, string> fields;
 
-  string sourcePdfFileName = *NanAsciiString(args[0]);
+  String::Utf8Value sourcePdfFileNameParam(args[0]->ToString());
+  string sourcePdfFileName = string(*sourcePdfFileNameParam);
+
   Local<Object> changeFields = args[1]->ToObject();
+  Local<String> saveStr = Nan::New("save").ToLocalChecked();
 
   // Check if any configuration parameters
   if (args.Length() > 2) {
     parameters = args[2]->ToObject();
-    Local<Value> saveParam = parameters->Get(NanNew<String>("save"));
+    Local<Value> saveParam = Nan::Get(parameters, saveStr).ToLocalChecked();
     if (!saveParam->IsUndefined()) {
-      saveFormat = *NanAsciiString(parameters->Get(NanNew<String>("save")));
+      String::Utf8Value saveFormatParam(Nan::Get(parameters, saveStr).ToLocalChecked());
+      saveFormat = string(*saveFormatParam);
     }
   }
 
@@ -136,7 +140,7 @@ WriteFieldsParams v8ParamsToCpp(const v8::FunctionCallbackInfo<Value>& args) {
   for (uint32_t i = 0; i < fieldArray->Length(); i += 1) {
     Local<Value> name = fieldArray->Get(i);
     Local<Value> value = changeFields->Get(name);
-    fields[std::string(*v8::String::Utf8Value(name))] = std::string(*v8::String::Utf8Value(value));
+    fields[std::string(*String::Utf8Value(name))] = std::string(*String::Utf8Value(value));
   }
 
   // Create and return PDF
@@ -241,18 +245,17 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
 // Read PDF form fields
 NAN_METHOD(ReadSync) {
-  NanScope();
 
   // expect a number as the first argument
-  NanUtf8String *fileName = new NanUtf8String(args[0]);
+  Nan::Utf8String *fileName = new Nan::Utf8String(info[0]);
   ostringstream ss;
   int n = 0;
 
   // If file does not exist, throw error and return false
   if (!fileExists(**fileName)) {
     ss << "File \"" << **fileName << "\" does not exist";
-    NanThrowError(NanNew<String>(ss.str()));
-    NanReturnValue(NanFalse());
+    Nan::ThrowError(Nan::New<String>(ss.str()).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::False());
   }
 
   // Open document and return false and throw error if something goes wrong
@@ -262,12 +265,12 @@ NAN_METHOD(ReadSync) {
     n = document->numPages();
   } else {
     ss << "Error occurred when reading \"" << **fileName << "\"";
-    NanThrowError(NanNew<String>(ss.str()));
-    NanReturnValue(NanFalse());
+    Nan::ThrowError(Nan::New<String>(ss.str()).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::False());
   }
 
   // Store field value objects to v8 array
-  Local<Array> fieldArray = NanNew<Array>();
+  Local<Array> fieldArray = Nan::New<Array>();
   int fieldNum = 0;
 
   for (int i = 0; i < n; i += 1) {
@@ -277,18 +280,18 @@ NAN_METHOD(ReadSync) {
       if (!field->isReadOnly() && field->isVisible()) {
 
         // Make JavaScript object out of the fieldnames
-        Local<Object> obj = NanNew<Object>();
-        obj->Set(NanNew<String>("name"), NanNew<String>(field->fullyQualifiedName().toStdString()));
-        obj->Set(NanNew<String>("page"), NanNew<Number>(i));
+        Local<Object> obj = Nan::New<Object>();
+        Nan::Set(obj, Nan::New<String>("name").ToLocalChecked(), Nan::New<String>(field->fullyQualifiedName().toStdString()).ToLocalChecked());
+        Nan::Set(obj, Nan::New<String>("page").ToLocalChecked(), Nan::New<Number>(i));
 
         // ! TODO ! Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
         string fieldType;
         // Set default value undefined
-        obj->Set(NanNew<String>("value"), NanUndefined());
+        Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), Nan::Undefined());
         Poppler::FormFieldButton *myButton;
         Poppler::FormFieldChoice *myChoice;
 
-        obj->Set(NanNew<String>("id"), NanNew<Number>(field->id()));
+        Nan::Set(obj, Nan::New<String>("id").ToLocalChecked(), Nan::New<Number>(field->id()));
         switch (field->type()) {
 
           // FormButton
@@ -299,7 +302,7 @@ NAN_METHOD(ReadSync) {
               case Poppler::FormFieldButton::Push:        fieldType = "push_button";     break;
               case Poppler::FormFieldButton::CheckBox:
                 fieldType = "checkbox";
-                obj->Set(NanNew<String>("value"), NanNew<Boolean>(myButton->state()));
+                Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), Nan::New<Boolean>(myButton->state()));
                 break;
               case Poppler::FormFieldButton::Radio:       fieldType = "radio";           break;
             }
@@ -307,19 +310,19 @@ NAN_METHOD(ReadSync) {
 
           // FormText
           case Poppler::FormField::FormText:
-            obj->Set(NanNew<String>("value"), NanNew<String>(((Poppler::FormFieldText *)field)->text().toStdString()));
+            Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), Nan::New<String>(((Poppler::FormFieldText *)field)->text().toStdString()).ToLocalChecked());
             fieldType = "text";
             break;
 
           // FormChoice
           case Poppler::FormField::FormChoice: {
-            Local<Array> choiceArray = NanNew<Array>();
+            Local<Array> choiceArray = Nan::New<Array>();
             myChoice = (Poppler::FormFieldChoice *)field;
             QStringList possibleChoices = myChoice->choices();
             for (int i = 0; i < possibleChoices.size(); i++) {
-              choiceArray->Set(i, NanNew<String>(possibleChoices.at(i).toStdString()));
+              Nan::Set(choiceArray, i, Nan::New<String>(possibleChoices.at(i).toStdString()).ToLocalChecked());
             }
-            obj->Set(NanNew<String>("choices"), choiceArray);
+            Nan::Set(obj, Nan::New<String>("choices").ToLocalChecked(), choiceArray);
             switch (myChoice->choiceType()) {
               case Poppler::FormFieldChoice::ComboBox:    fieldType = "combobox";       break;
               case Poppler::FormFieldChoice::ListBox:     fieldType = "listbox";        break;
@@ -335,7 +338,7 @@ NAN_METHOD(ReadSync) {
             break;
         }
 
-        obj->Set(NanNew<String>("type"), NanNew<String>(fieldType.c_str()));
+        Nan::Set(obj, Nan::New<String>("type").ToLocalChecked(), Nan::New<String>(fieldType.c_str()).ToLocalChecked());
 
         fieldArray->Set(fieldNum, obj);
         fieldNum++;
@@ -344,30 +347,27 @@ NAN_METHOD(ReadSync) {
     }
   }
 
-  NanReturnValue(fieldArray);
+  info.GetReturnValue().Set(fieldArray);
 }
 
 // Write PDF form fields
 NAN_METHOD(WriteSync) {
-  NanScope();
 
   // Check and return parameters given at JavaScript function call
-  WriteFieldsParams params = v8ParamsToCpp(args);
+  WriteFieldsParams params = v8ParamsToCpp(info);
 
   // Create and return pdf
   try
   {
     QBuffer *buffer = writePdfFields(params);
-    Local<Object> returnPdf = NanNewBufferHandle(buffer->data().data(), buffer->size());
+    Local<Object> returnPdf = Nan::CopyBuffer((char *)buffer->data().data(), buffer->size()).ToLocalChecked();
     buffer->close();
     delete buffer;
-    NanReturnValue(returnPdf);
+    info.GetReturnValue().Set(returnPdf);
   }
   catch (string error)
   {
-    NanThrowError(NanNew<String>(error));
-    NanReturnValue(NanNull());
+    Nan::ThrowError(Nan::New<String>(error).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::Null());
   }
 }
-
-

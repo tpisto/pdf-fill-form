@@ -12,10 +12,10 @@ using v8::String;
 using v8::Array;
 using namespace std;
 
-class PdfWriteWorker : public NanAsyncWorker {
+class PdfWriteWorker : public Nan::AsyncWorker {
   public:
-    PdfWriteWorker(NanCallback *callback, struct WriteFieldsParams params)
-      : NanAsyncWorker(callback), params(params) {}
+    PdfWriteWorker(Nan::Callback *callback, struct WriteFieldsParams params)
+      : Nan::AsyncWorker(callback), params(params) {}
     ~PdfWriteWorker() {}
 
     // Executed inside the worker-thread.
@@ -23,11 +23,11 @@ class PdfWriteWorker : public NanAsyncWorker {
     // here, so everything we need for input and output
     // should go on `this`.
     void Execute () {
-      try 
+      try
       {
         buffer = writePdfFields(params);
       }
-      catch (string error) 
+      catch (string error)
       {
         SetErrorMessage(error.c_str());
       }
@@ -37,10 +37,10 @@ class PdfWriteWorker : public NanAsyncWorker {
     // this function will be run inside the main event loop
     // so it is safe to use V8 again
     void HandleOKCallback () {
-      NanScope();
+      Nan:: HandleScope scope;
       Local<Value> argv[] = {
-          NanNull()
-        , NanNewBufferHandle(buffer->data().data(), buffer->size())
+          Nan::Null()
+        , Nan::CopyBuffer((char *)buffer->data().data(), buffer->size()).ToLocalChecked()
       };
       buffer->close();
       delete buffer;
@@ -54,13 +54,10 @@ class PdfWriteWorker : public NanAsyncWorker {
 
 // Asynchronous access to the `writePdfFields` function
 NAN_METHOD(WriteAsync) {
-  NanScope();
+  WriteFieldsParams params = v8ParamsToCpp(info);
 
-  WriteFieldsParams params = v8ParamsToCpp(args);
-
-  NanCallback *callback = new NanCallback(args[3].As<Function>());
+  Nan::Callback *callback = new Nan::Callback(info[3].As<Function>());
 
   PdfWriteWorker *writeWorker = new PdfWriteWorker(callback, params);
-  NanAsyncQueueWorker(writeWorker);
-  NanReturnUndefined();
+  Nan::AsyncQueueWorker(writeWorker);
 }

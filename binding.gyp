@@ -3,8 +3,8 @@
         {
             "target_name": "pdf_fill_form",
             "variables": {
-                "myLibraries": "cairo poppler",
-                "myIncludes": "QtCore"
+                "myLibraries": "cairo poppler-qt5",
+                "myIncludes": ""
             },            
             "sources": [
                 "src/pdf-fill-form.cc",

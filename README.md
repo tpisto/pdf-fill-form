@@ -4,7 +4,7 @@ PDF Fill Form (**pdf-fill-form**) is Node.js native C++ library for filling PDF 
 Libary uses internally Poppler QT4 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
 ##Features
 
-* __NEW version 2.0.0__: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0
+* __NEW version 2.0.0__: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0
 
 * Supports reading and writing the following PDF form field types: TextField and Checkbox 
 * You can write following files:
@@ -87,7 +87,7 @@ Use parameter { "save": "imgpdf" }
 Preferable method to install library dependencies is via [Homebrew](http://brew.sh/)
 
 ```
-$ brew install qt4 cairo poppler --with-qt4
+$ brew install qt5 cairo poppler --with-qt5
 ```
 After dependencies are successfully installed, you can install the library:
 

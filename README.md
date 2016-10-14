@@ -97,6 +97,12 @@ $ npm install pdf-fill-form
 > Homebrew users who get error regarding xcb-shm  
 > The fix is to add this to your bash profile / environment: export PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig
 
+If you still run into issues, or had an existing qt installed try to force link it:
+```
+brew linkapps qt5
+brew link --force qt5
+```
+
 ###Linux - Ubuntu (trusty)
 ```
 $ sudo apt-get install libpoppler-qt5-dev libcairo2-dev

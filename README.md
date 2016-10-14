@@ -99,7 +99,7 @@ $ npm install pdf-fill-form
 
 ###Linux - Ubuntu (trusty)
 ```
-$ sudo apt-get install libpoppler-qt4-dev libcairo2-dev
+$ sudo apt-get install libpoppler-qt5-dev libcairo2-dev
 $ npm install pdf-fill-form
 ```
 ###Linux - Debian (wheezy)
@@ -113,7 +113,7 @@ Then install packages
 
 ```
 $ sudo apt-get install libcairo2-dev
-$ sudo apt-get -t wheezy-backports install libpoppler-qt4-dev 
+$ sudo apt-get -t wheezy-backports install libpoppler-qt5-dev 
 $ npm install pdf-fill-form
 ```
 ### TravisCI
@@ -121,7 +121,7 @@ $ npm install pdf-fill-form
 addons:
   apt:
     packages:
-      - libpoppler-qt4-dev
+      - libpoppler-qt5-dev
       - libcairo2-dev
 ```
 

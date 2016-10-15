@@ -122,14 +122,6 @@ $ sudo apt-get install libcairo2-dev
 $ sudo apt-get -t wheezy-backports install libpoppler-qt5-dev 
 $ npm install pdf-fill-form
 ```
-### TravisCI
-```
-addons:
-  apt:
-    packages:
-      - libpoppler-qt5-dev
-      - libcairo2-dev
-```
 
 ##Todo
 * Tests

@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <poppler/qt4/poppler-form.h>
-#include <poppler/qt4/poppler-qt4.h>
+#include <poppler/qt5/poppler-form.h>
+#include <poppler/qt5/poppler-qt5.h>
 
 #include <cairo/cairo.h>
 #include <cairo/cairo-pdf.h>

@@ -1,10 +1,10 @@
 <img src="http://res.cloudinary.com/tpisto/image/upload/v1428317033/pdf-fill-form-logo_rlfj7o.png" width="400"><br/>
 PDF Fill Form (**pdf-fill-form**) is Node.js native C++ library for filling PDF forms. Created PDF file is returned back as Node.js Buffer object for further processing or saving - *whole process is done in memory*. Library offers methods to return filled PDF also as PDF file where pages are converted to images.
 
-Libary uses internally Poppler QT4 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
+Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
 ##Features
 
-* __NEW version 2.0.0__: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0
+* __NEW version 2.0.0__: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0
 
 * Supports reading and writing the following PDF form field types: TextField and Checkbox 
 * You can write following files:
@@ -87,7 +87,7 @@ Use parameter { "save": "imgpdf" }
 Preferable method to install library dependencies is via [Homebrew](http://brew.sh/)
 
 ```
-$ brew install qt4 cairo poppler --with-qt4
+$ brew install qt5 cairo poppler --with-qt5
 ```
 After dependencies are successfully installed, you can install the library:
 
@@ -97,9 +97,15 @@ $ npm install pdf-fill-form
 > Homebrew users who get error regarding xcb-shm  
 > The fix is to add this to your bash profile / environment: export PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig
 
+If you still run into issues, or had an existing qt installed try to force link it:
+```
+brew linkapps qt5
+brew link --force qt5
+```
+
 ###Linux - Ubuntu (trusty)
 ```
-$ sudo apt-get install libpoppler-qt4-dev libcairo2-dev
+$ sudo apt-get install libpoppler-qt5-dev libcairo2-dev
 $ npm install pdf-fill-form
 ```
 ###Linux - Debian (wheezy)
@@ -113,9 +119,10 @@ Then install packages
 
 ```
 $ sudo apt-get install libcairo2-dev
-$ sudo apt-get -t wheezy-backports install libpoppler-qt4-dev 
+$ sudo apt-get -t wheezy-backports install libpoppler-qt5-dev 
 $ npm install pdf-fill-form
 ```
+
 ##Todo
 * Tests
 * Refactoring

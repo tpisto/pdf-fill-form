@@ -3,8 +3,7 @@
         {
             "target_name": "pdf_fill_form",
             "variables": {
-                "myLibraries": "cairo poppler-qt4",
-                "myIncludes": "QtCore"
+                "myLibraries": "cairo poppler-qt5"
             },            
             "sources": [
                 "src/pdf-fill-form.cc",
@@ -14,7 +13,7 @@
             'cflags!': [ '-fno-exceptions' ],
             'cflags_cc!': [ '-fno-exceptions' ],
             "cflags": [
-                "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"
+                "<!@(pkg-config --cflags <(myLibraries))"
             ],
             "xcode_settings": {
                 'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
@@ -23,7 +22,7 @@
                     '-std=c++11',
                     '-stdlib=libc++',                
                     "-fexceptions",
-                    "<!@(pkg-config --cflags <(myLibraries) <(myIncludes))"
+                    "<!@(pkg-config --cflags <(myLibraries))"
                 ]
             },
             "libraries": [

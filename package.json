@@ -6,7 +6,7 @@
     "pdf",
     "forms",
     "poppler",
-    "qt4",
+    "qt5",
     "cairo"
   ],
   "version": "3.0.0",

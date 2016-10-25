@@ -134,6 +134,7 @@ $ npm install pdf-fill-form
 ##Contibutors
 - Ethan Goldblum
 - Tyler Iguchi
+- Rob Davarnia
 
 ## License
 MIT  

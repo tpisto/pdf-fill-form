@@ -15,6 +15,14 @@
             "cflags": [
                 "<!@(pkg-config --cflags <(myLibraries))"
             ],
+            'conditions': [
+                ['OS=="linux"', {'cflags': [
+                    "-isystem /usr/include/x86_64-linux-gnu/qt5",
+                    "-isystem /usr/include/x86_64-linux-gnu/qt5/QtCore",
+                    "-isystem /usr/include/x86_64-linux-gnu/qt5/QtGui",
+                    "-lQt5Core"
+                    "-lQt5Gui"]}]
+            ],
             "xcode_settings": {
                 'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
                 "OTHER_CFLAGS": [

@@ -110,19 +110,22 @@ brew link --force qt5
 $ sudo apt-get install libpoppler-qt5-dev libcairo2-dev
 $ npm install pdf-fill-form
 ```
-###Linux - Debian (wheezy)
-We need newer Poppler library than the current in Wheezy distribution: 
+###Linux - Debian (jessie)
 
+To be sure to have the required packages, re-synchronize the package index files from their sources :
 ```
-$ sudo add-apt-repository "deb http://http.debian.net/debian wheezy-backports main"     
 $ sudo apt-get update
 ```
-Then install packages
+Then install packages :
 
 ```
-$ sudo apt-get install libcairo2-dev
-$ sudo apt-get -t wheezy-backports install libpoppler-qt5-dev 
+$ sudo apt-get install libcairo2-dev libpoppler-qt5-dev 
 $ npm install pdf-fill-form
+```
+
+I mostly recommand to install this package to have better support with fonts :
+```
+$ sudo apt-get install poppler-data
 ```
 
 ##Todo

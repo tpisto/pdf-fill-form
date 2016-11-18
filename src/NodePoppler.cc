@@ -71,8 +71,10 @@ void createPdf(QBuffer *buffer, Poppler::Document *document) {
     //     NotSupportedInputFileError
     // };
     ss << "Error occurred when converting PDF: " << converter->lastError();
+    delete converter;
     throw ss.str();
   }
+  delete converter;
 }
 
 void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
@@ -97,15 +99,22 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
     cairo_surface_t *drawImageSurface = cairo_image_surface_create_from_png_stream(readPngFromBuffer, pageImage);
     cairo_set_source_surface(cr, drawImageSurface, 0, 0);
     cairo_paint(cr);
+    cairo_surface_destroy(drawImageSurface);
 
     // Create new page if multipage document
     if (n > 0) {
       cairo_surface_show_page(surface);
+      if (cr != NULL) {
+        cairo_destroy(cr);
+      }
       cr = cairo_create(surface);
       cairo_scale(cr, 0.2, 0.2);
     }
 
     pageImage->close();
+    delete pageImage;
+
+    delete page;
   }
 
   // Close Cairo
@@ -170,8 +179,9 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
   stringstream idSS;
   for (int i = 0; i < n; i += 1) {
     Poppler::Page *page = document->page(i);
+    QList<Poppler::FormField *> formFields = page->formFields();
 
-    foreach (Poppler::FormField *field, page->formFields()) {
+    foreach (Poppler::FormField *field, formFields) {
       string fieldName = field->fullyQualifiedName().toStdString();
       // Support writing fields by both fieldName and id.
       // If fieldName is not present in params, try id.
@@ -219,6 +229,9 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
         }
       }
     }
+
+    qDeleteAll(formFields);
+    delete page;
   }
 
   // Now save and return the document
@@ -232,6 +245,8 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
   else {
     createPdf(bufferDevice, document);
   }
+
+  delete document;
 
   return bufferDevice;
 }
@@ -269,13 +284,17 @@ NAN_METHOD(ReadSync) {
     info.GetReturnValue().Set(Nan::False());
   }
 
+  delete fileName;
+
   // Store field value objects to v8 array
   Local<Array> fieldArray = Nan::New<Array>();
   int fieldNum = 0;
 
   for (int i = 0; i < n; i += 1) {
     Poppler::Page *page = document->page(i);
-    foreach (Poppler::FormField *field, page->formFields()) {
+    QList<Poppler::FormField *> formFields = page->formFields();
+
+    foreach (Poppler::FormField *field, formFields) {
 
       if (!field->isReadOnly() && field->isVisible()) {
 
@@ -345,9 +364,14 @@ NAN_METHOD(ReadSync) {
 
       }
     }
+
+    qDeleteAll(formFields);
+    delete page;
   }
 
   info.GetReturnValue().Set(fieldArray);
+
+  delete document;
 }
 
 // Write PDF form fields

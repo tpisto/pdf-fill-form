@@ -17,6 +17,9 @@
             ],
             'conditions': [
                 ['OS=="linux"', {'cflags': [
+                    "-isystem /usr/include/qt5",
+                    "-isystem /usr/include/qt5/QtCore",
+                    "-isystem /usr/include/qt5/QtGui",
                     "-isystem /usr/include/x86_64-linux-gnu/qt5",
                     "-isystem /usr/include/x86_64-linux-gnu/qt5/QtCore",
                     "-isystem /usr/include/x86_64-linux-gnu/qt5/QtGui",

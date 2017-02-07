@@ -142,6 +142,7 @@ $ sudo apt-get install poppler-data
 - Rob Davarnia
 - Fabrice Ongenae
 - Juwan Yoo
+- Andreas Gruenbacher
 
 ## License
 MIT  

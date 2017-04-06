@@ -2,7 +2,7 @@
 PDF Fill Form (**pdf-fill-form**) is Node.js native C++ library for filling PDF forms. Created PDF file is returned back as Node.js Buffer object for further processing or saving - *whole process is done in memory*. Library offers methods to return filled PDF also as PDF file where pages are converted to images.
 
 Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
-##Features
+## Features
 
 * __NEW version 3.0.0__: Updated QT library to version 5 (by Rob Davarnia @robdvr). 
 
@@ -16,8 +16,8 @@ Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is us
 * Results are returned in Node.js Buffer -object
 * Not using the PDFtk -executable - instead we use the Poppler library
 
-##Examples
-###Using promises
+## Examples
+### Using promises
 ```javascript
 var pdfFillForm = require('pdf-fill-form');
 
@@ -45,7 +45,7 @@ pdfFillForm.write('test.pdf', { "myField": "myField fill value" }, { "save": "pd
 });
 
 ```
-###Using callbacks
+### Using callbacks
 To **read** all form fields:  
 
 ```javascript
@@ -83,9 +83,9 @@ To **write** form fields to PDF where pages are converted to images:
 
 Use parameter { "save": "imgpdf" }
 
-##Installation
+## Installation
 
-###OS X
+### OS X
 Preferable method to install library dependencies is via [Homebrew](http://brew.sh/)
 
 ```
@@ -105,12 +105,12 @@ brew linkapps qt5
 brew link --force qt5
 ```
 
-###Linux - Ubuntu (trusty)
+### Linux - Ubuntu (trusty)
 ```
 $ sudo apt-get install libpoppler-qt5-dev libcairo2-dev
 $ npm install pdf-fill-form
 ```
-###Linux - Debian (jessie)
+### Linux - Debian (jessie)
 
 To be sure to have the required packages, re-synchronize the package index files from their sources :
 ```
@@ -128,15 +128,15 @@ I mostly recommand to install this package to have better support with fonts :
 $ sudo apt-get install poppler-data
 ```
 
-##Todo
+## Todo
 * Tests
 * Refactoring
 * Support for other form field types than CheckBox and TextField
 
-##Authors
+## Authors
 - [Tommi Pisto](https://github.com/tpisto)
 
-##Contibutors
+## Contibutors
 - Ethan Goldblum
 - Tyler Iguchi
 - Rob Davarnia

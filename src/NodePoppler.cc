@@ -78,13 +78,30 @@ void createPdf(QBuffer *buffer, Poppler::Document *document) {
 }
 
 void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
+  // Calculate max page sizes. The output PDF will have its size set to max width/height.
+  double maxWidth = 0;
+  double maxHeight = 0;
 
-  // Initialize Cairo writing surface, and since we have images at 360 DPI, we'll set scaling. Width and Height are set for A4 dimensions.
-  cairo_surface_t *surface = cairo_pdf_surface_create_for_stream(writePngToBuffer, buffer, 595.00, 842.00);
+  int n = document->numPages();
+
+  for (int i = 0; i < n; i += 1) {
+    Poppler::Page *page = document->page(i);
+
+    QSizeF size = page->pageSizeF();
+
+    if (size.height() > maxHeight)
+      maxHeight = size.height();
+
+    if (size.width() > maxWidth)
+      maxWidth = size.width();
+  }
+
+  // Initialize Cairo writing surface, and since we have images at 360 DPI, we'll set scaling.
+  cairo_surface_t *surface = cairo_pdf_surface_create_for_stream(writePngToBuffer, buffer, maxWidth, maxHeight);
   cairo_t *cr = cairo_create(surface);
   cairo_scale(cr, 0.2, 0.2);
 
-  int n = document->numPages();
+
   for (int i = 0; i < n; i += 1) {
     Poppler::Page *page = document->page(i);
 

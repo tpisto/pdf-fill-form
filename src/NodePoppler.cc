@@ -237,26 +237,26 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
         // ! TODO ! Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
         if (field->type() == Poppler::FormField::FormButton) {
           Poppler::FormFieldButton* myButton = (Poppler::FormFieldButton *)field;
-    	  switch (myButton->buttonType()) {
-    		// Push
-    		case Poppler::FormFieldButton::Push:     break;
-    		case Poppler::FormFieldButton::CheckBox:
-    		  if (params.fields[fieldName].compare("true") == 0) {
-    		    myButton->setState(true);
-    		  }
-    		  else {
-    			myButton->setState(false);
-    		  }
-    		  break;
-    		case Poppler::FormFieldButton::Radio:
-    		  if (params.fields[fieldName].compare(myButton->caption().toUtf8().constData()) == 0) {
-    			myButton->setState(true);
-    		  }
-    		  else {
-    		    myButton->setState(false);
-    		  }
-    		  break;
-    		}
+          switch (myButton->buttonType()) {
+            // Push
+            case Poppler::FormFieldButton::Push:     break;
+            case Poppler::FormFieldButton::CheckBox:
+              if (params.fields[fieldName].compare("true") == 0) {
+                myButton->setState(true);
+              }
+              else {
+                myButton->setState(false);
+              }
+              break;
+            case Poppler::FormFieldButton::Radio:
+              if (params.fields[fieldName].compare(myButton->caption().toUtf8().constData()) == 0) {
+                myButton->setState(true);
+              }
+              else {
+                myButton->setState(false);
+              }
+              break;
+            }
           }
         }
       }

@@ -133,6 +133,11 @@ $ sudo apt-get install poppler-data
 * Refactoring
 * Support for other form field types than CheckBox and TextField
 
+## Changelog (from 24.5.2017 ->)
+
+v3.2.0 (24.5.3017)
+- Support for radio buttons (mttchrry)
+
 ## Authors
 - [Tommi Pisto](https://github.com/tpisto)
 
@@ -145,6 +150,7 @@ $ sudo apt-get install poppler-data
 - Andreas Gruenbacher
 - Andrei Dracea
 - Emil Sedgh
+- Matt Cherry
 
 ## License
 MIT  

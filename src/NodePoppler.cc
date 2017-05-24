@@ -256,7 +256,6 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
                 myButton->setState(false);
               }
               break;
-            }
           }
         }
       }

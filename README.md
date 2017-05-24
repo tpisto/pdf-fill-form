@@ -8,7 +8,9 @@ Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is us
 
 * Version 2.0.0__: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0, v6.9.1
 
-* Supports reading and writing the following PDF form field types: TextField, Radio Button, and Checkbox 
+
+* Supports reading and writing the following PDF form field types: TextField, Checkbox, Radio button
+
 * You can write following files:
 	* PDF
 	* PDF where pages are converted to images
@@ -83,6 +85,11 @@ To **write** form fields to PDF where pages are converted to images:
 
 Use parameter { "save": "imgpdf" }
 
+### Notes about using radio buttons (@mttchrry)
+Just set the radio button field Value to the caption of the item you want to select.
+
+For example if you have a radio button for gender called "Gender1" with options captioned as "Male" or "Female" then passing in the field {"Gender1": "Male"} will select the male radio button, as expected.
+
 ## Installation
 
 ### OS X
@@ -131,7 +138,12 @@ $ sudo apt-get install poppler-data
 ## Todo
 * Tests
 * Refactoring
-* Support for other form field types than CheckBox and TextField
+* Support for other form field types than CheckBox, Radio button and TextField
+
+## Changelog (from 24.5.2017 ->)
+
+v3.2.0 (24.5.2017)
+- Support for radio buttons (@mttchrry)
 
 ## Authors
 - [Tommi Pisto](https://github.com/tpisto)
@@ -145,6 +157,7 @@ $ sudo apt-get install poppler-data
 - Andreas Gruenbacher
 - Andrei Dracea
 - Emil Sedgh
+- Matt Cherry
 
 ## License
 MIT  

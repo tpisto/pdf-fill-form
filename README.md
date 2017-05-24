@@ -136,7 +136,7 @@ $ sudo apt-get install poppler-data
 ## Changelog (from 24.5.2017 ->)
 
 v3.2.0 (24.5.3017)
-- Support for radio buttons (mttchrry)
+- Support for radio buttons (@mttchrry)
 
 ## Authors
 - [Tommi Pisto](https://github.com/tpisto)

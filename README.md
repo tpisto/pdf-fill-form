@@ -157,6 +157,7 @@ v3.2.0 (24.5.2017)
 - Andrei Dracea
 - Emil Sedgh
 - Matt Cherry
+- Mario Ferreira
 
 ## License
 MIT  

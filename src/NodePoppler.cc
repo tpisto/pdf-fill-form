@@ -354,7 +354,10 @@ NAN_METHOD(ReadSync) {
                 fieldType = "checkbox";
                 Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), Nan::New<Boolean>(myButton->state()));
                 break;
-              case Poppler::FormFieldButton::Radio:       fieldType = "radio";           break;
+              case Poppler::FormFieldButton::Radio:
+                fieldType = "radio";
+                Nan::Set(obj, Nan::New<String>("caption").ToLocalChecked(), Nan::New<String>(myButton->caption().toStdString()).ToLocalChecked());
+                break;
             }
             break;
 

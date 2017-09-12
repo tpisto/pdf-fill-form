@@ -6,7 +6,7 @@ var formFields = pdfFormFill.readSync('test.pdf');
 console.log(formFields);
 
 // Write fields
-pdfFormFill.writeAsync('test.pdf', { 'myField1': 'myField1 fill text' }, { 'save': 'imgpdf' }, function(err, result) {
+pdfFormFill.writeAsync('test.pdf', { 'myField1': 'myField1 fill text' }, { 'save': 'imgpdf', 'cores': 8, 'scale': 0.2, 'antialias': true }, function(err, result) {
   if (err) {
       return console.log(err);
   }

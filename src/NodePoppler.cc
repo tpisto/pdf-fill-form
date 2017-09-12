@@ -15,6 +15,10 @@
 #include <QtCore/QBuffer>
 #include <QtCore/QFile>
 #include <QtGui/QImage>
+#include <QMutex>
+#include <QRunnable>
+#include <QSemaphore>
+#include <QThreadPool>
 
 #include "NodePoppler.h"    // NOLINT(build/include)
 
@@ -77,7 +81,50 @@ void createPdf(QBuffer *buffer, Poppler::Document *document) {
   delete converter;
 }
 
-void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
+class RenderToBufferRunnable : public QRunnable
+{
+public:
+  RenderToBufferRunnable(Poppler::Document *document, int pageNumber, double scale_factor, QHash<int, QPair<QBuffer *, cairo_surface_t *>> *pages, QMutex *pagesMutex, QSemaphore *pagesSemaphore)
+   : m_document(document)
+   , m_pageNumber(pageNumber)
+   , m_scale_factor(scale_factor)
+   , m_pages(pages)
+   , m_pagesMutex(pagesMutex)
+   , m_pagesSemaphore(pagesSemaphore)
+  {
+  }
+
+  void run() override
+  {
+    Poppler::Page *page = m_document->page(m_pageNumber);
+
+    // Save the page as PNG image to buffer. (We could use QFile if we want to save images to files)
+    QBuffer *pageImage = new QBuffer();
+    pageImage->open(QIODevice::ReadWrite);
+    QImage img = page->renderToImage(72 / m_scale_factor, 72 / m_scale_factor);
+    img.save(pageImage, "png");
+    pageImage->seek(0);  // Reading does not work if we don't reset the pointer
+
+    delete page;
+
+    cairo_surface_t *drawImageSurface = cairo_image_surface_create_from_png_stream(readPngFromBuffer, pageImage);
+
+    m_pagesMutex->lock();
+    m_pages->insert(m_pageNumber, QPair<QBuffer*, cairo_surface_t *>(pageImage, drawImageSurface));
+    m_pagesSemaphore->release();
+    m_pagesMutex->unlock();
+  }
+
+private:
+  Poppler::Document *m_document;
+  const int m_pageNumber;
+  const double m_scale_factor;
+  QHash<int, QPair<QBuffer *, cairo_surface_t *>> *m_pages;
+  QMutex *m_pagesMutex;
+  QSemaphore *m_pagesSemaphore;
+};
+
+void createImgPdf(QBuffer *buffer, Poppler::Document *document, const struct WriteFieldsParams &params) {
   // Calculate max page sizes. The output PDF will have its size set to max width/height.
   double maxWidth = 0;
   double maxHeight = 0;
@@ -99,21 +146,40 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
   // Initialize Cairo writing surface, and since we have images at 360 DPI, we'll set scaling.
   cairo_surface_t *surface = cairo_pdf_surface_create_for_stream(writePngToBuffer, buffer, maxWidth, maxHeight);
   cairo_t *cr = cairo_create(surface);
-  cairo_scale(cr, 0.2, 0.2);
+  cairo_scale(cr, params.scale_factor, params.scale_factor);
 
+  if (params.antialiasing) {
+    document->setRenderHint(Poppler::Document::Antialiasing);
+    document->setRenderHint(Poppler::Document::TextAntialiasing);
+  }
+
+  QThreadPool tp;
+  tp.setMaxThreadCount(params.cores);
+
+  QMutex pagesMutex;
+  QSemaphore pagesSemaphore;
+  QHash<int, QPair<QBuffer *, cairo_surface_t *>> pages;
 
   for (int i = 0; i < n; i += 1) {
-    Poppler::Page *page = document->page(i);
+    auto task = new RenderToBufferRunnable(document, i, params.scale_factor, &pages, &pagesMutex, &pagesSemaphore);
+    tp.start(task);
 
-    // Save the page as PNG image to buffer. (We could use QFile if we want to save images to files)
-    QBuffer *pageImage = new QBuffer();
-    pageImage->open(QIODevice::ReadWrite);
-    QImage img = page->renderToImage(360, 360);
-    img.save(pageImage, "png");
-    pageImage->seek(0);  // Reading does not work if we don't reset the pointer
+  }
 
+  for (int i = 0; i < n; i += 1) {
+    pagesMutex.lock();
+    QBuffer *pageImage = pages[i].first;
+    cairo_surface_t *drawImageSurface = pages[i].second;
+    pagesMutex.unlock();
+    while (drawImageSurface == nullptr) {
+      pagesSemaphore.acquire();
+
+      pagesMutex.lock();
+      pageImage = pages[i].first;
+      drawImageSurface = pages[i].second;
+      pagesMutex.unlock();
+    }
     // Ookay, let's try to make new page out of the image
-    cairo_surface_t *drawImageSurface = cairo_image_surface_create_from_png_stream(readPngFromBuffer, pageImage);
     cairo_set_source_surface(cr, drawImageSurface, 0, 0);
     cairo_paint(cr);
     cairo_surface_destroy(drawImageSurface);
@@ -125,13 +191,11 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document) {
         cairo_destroy(cr);
       }
       cr = cairo_create(surface);
-      cairo_scale(cr, 0.2, 0.2);
+      cairo_scale(cr, params.scale_factor, params.scale_factor);
     }
 
     pageImage->close();
     delete pageImage;
-
-    delete page;
   }
 
   // Close Cairo
@@ -144,20 +208,43 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
   Local<Object> parameters;
   string saveFormat = "imgpdf";
   map<string, string> fields;
+  int nCores = 1;
+  double scale_factor = 0.2;
+  bool antialiasing = false;
 
   String::Utf8Value sourcePdfFileNameParam(args[0]->ToString());
   string sourcePdfFileName = string(*sourcePdfFileNameParam);
 
   Local<Object> changeFields = args[1]->ToObject();
-  Local<String> saveStr = Nan::New("save").ToLocalChecked();
 
   // Check if any configuration parameters
   if (args.Length() > 2) {
+    Local<String> saveStr = Nan::New("save").ToLocalChecked();
+    Local<String> coresStr = Nan::New("cores").ToLocalChecked();
+    Local<String> scaleStr = Nan::New("scale").ToLocalChecked();
+    Local<String> antialiasStr = Nan::New("antialias").ToLocalChecked();
+
     parameters = args[2]->ToObject();
+
     Local<Value> saveParam = Nan::Get(parameters, saveStr).ToLocalChecked();
     if (!saveParam->IsUndefined()) {
-      String::Utf8Value saveFormatParam(Nan::Get(parameters, saveStr).ToLocalChecked());
+      String::Utf8Value saveFormatParam(saveParam);
       saveFormat = string(*saveFormatParam);
+    }
+
+    Local<Value> coresParam = Nan::Get(parameters, coresStr).ToLocalChecked();
+    if (coresParam->IsInt32()) {
+      nCores = coresParam->Int32Value();
+    }
+
+    Local<Value> scaleParam = Nan::Get(parameters, scaleStr).ToLocalChecked();
+    if (scaleParam->IsNumber()) {
+      scale_factor = scaleParam->NumberValue();
+    }
+
+    Local<Value> antialiasParam = Nan::Get(parameters, antialiasStr).ToLocalChecked();
+    if (antialiasParam->IsBoolean()) {
+      antialiasing = antialiasParam->BooleanValue();
     }
   }
 
@@ -169,13 +256,15 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
     fields[std::string(*String::Utf8Value(name))] = std::string(*String::Utf8Value(value));
   }
 
-  // Create and return PDF
   struct WriteFieldsParams params(sourcePdfFileName, saveFormat, fields);
+  params.cores = nCores;
+  params.scale_factor = scale_factor;
+  params.antialiasing = antialiasing;
   return params;
 }
 
 // Pdf creator that is not dependent on V8 internals (safe at async?)
-QBuffer *writePdfFields(struct WriteFieldsParams params) {
+QBuffer *writePdfFields(const struct WriteFieldsParams &params) {
 
   ostringstream ss;
   // If source file does not exist, throw error and return false
@@ -212,18 +301,18 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
         // Text
         if (field->type() == Poppler::FormField::FormText) {
           Poppler::FormFieldText *textField = (Poppler::FormFieldText *) field;
-          textField->setText(QString::fromUtf8(params.fields[fieldName].c_str()));
+          textField->setText(QString::fromUtf8(params.fields.at(fieldName).c_str()));
         }
 
         // Choice
         if (field->type() == Poppler::FormField::FormChoice) {
           Poppler::FormFieldChoice *choiceField = (Poppler::FormFieldChoice *) field;
           if (choiceField->isEditable()) {
-            choiceField->setEditChoice(QString::fromUtf8(params.fields[fieldName].c_str()));
+            choiceField->setEditChoice(QString::fromUtf8(params.fields.at(fieldName).c_str()));
           }
           else {
             QStringList possibleChoices = choiceField->choices();
-            QString proposedChoice = QString::fromUtf8(params.fields[fieldName].c_str());
+            QString proposedChoice = QString::fromUtf8(params.fields.at(fieldName).c_str());
             int index = possibleChoices.indexOf(proposedChoice);
             if (index >= 0) {
               QList<int> choiceList;
@@ -241,7 +330,7 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
             // Push
             case Poppler::FormFieldButton::Push:     break;
             case Poppler::FormFieldButton::CheckBox:
-              if (params.fields[fieldName].compare("true") == 0) {
+              if (params.fields.at(fieldName).compare("true") == 0) {
                 myButton->setState(true);
               }
               else {
@@ -249,7 +338,7 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
               }
               break;
             case Poppler::FormFieldButton::Radio:
-              if (params.fields[fieldName].compare(myButton->caption().toUtf8().constData()) == 0) {
+              if (params.fields.at(fieldName).compare(myButton->caption().toUtf8().constData()) == 0) {
                 myButton->setState(true);
               }
               else {
@@ -271,7 +360,7 @@ QBuffer *writePdfFields(struct WriteFieldsParams params) {
 
   // Get save parameters
   if (params.saveFormat == "imgpdf") {
-    createImgPdf(bufferDevice, document);
+    createImgPdf(bufferDevice, document, params);
   }
   else {
     createPdf(bufferDevice, document);

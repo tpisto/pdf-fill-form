@@ -13,13 +13,16 @@ struct WriteFieldsParams {
   string sourcePdfFileName;
   string saveFormat;
   map<string, string> fields;
+  int cores;
+  double scale_factor;
+  bool antialiasing;
 };
 
 NAN_METHOD(ReadSync);
 NAN_METHOD(WriteSync);
 
 WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args);
-QBuffer *writePdfFields(WriteFieldsParams params);
+QBuffer *writePdfFields(const struct WriteFieldsParams &params);
 
 // }
 

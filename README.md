@@ -6,7 +6,7 @@ Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is us
 
 * __NEW version 4.0.0__: Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
 
-* __NEW version 3.0.0__: Updated QT library to version 5 (by Rob Davarnia @robdvr). 
+* Version 3.0.0__: Updated QT library to version 5 (by Rob Davarnia @robdvr). 
 
 * Version 2.0.0__: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0, v6.9.1
 

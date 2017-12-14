@@ -150,7 +150,7 @@ v3.3.0 (14.12.2017)
 - #49 Set radio button "value" to the poppler button state (by Mihai Saru @MitzaCoder)
 
 v4.0.0 (14.12.2017)
-- #45 Set radio button "value" to the poppler button state (by @tsdgeos)
+- #45 Set radio button "value" to the poppler button state (by Albert Astals Cid @tsdgeos)
 
 ## Authors
 - [Tommi Pisto](https://github.com/tpisto)

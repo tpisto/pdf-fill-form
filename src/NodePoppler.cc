@@ -357,6 +357,7 @@ NAN_METHOD(ReadSync) {
               case Poppler::FormFieldButton::Radio:
                 fieldType = "radio";
                 Nan::Set(obj, Nan::New<String>("caption").ToLocalChecked(), Nan::New<String>(myButton->caption().toStdString()).ToLocalChecked());
+                Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), Nan::New<Boolean>(myButton->state()));
                 break;
             }
             break;

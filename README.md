@@ -167,7 +167,7 @@ v4.0.0 (14.12.2017)
 - Matt Cherry
 - Mario Ferreira
 - Mihai Saru @MitzaCoder
-- @tsdgeos
+- Albert Astals Cid @tsdgeos
 
 ## License
 MIT  

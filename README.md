@@ -144,7 +144,7 @@ $ sudo apt-get install poppler-data
 v3.2.0 (24.5.2017)
 - Support for radio buttons (@mttchrry)
 
-v3.2.1 (14.12.2017)
+v3.3.0 (14.12.2017)
 - #49 Set radio button "value" to the poppler button state (@MitzaCoder)
 
 ## Authors

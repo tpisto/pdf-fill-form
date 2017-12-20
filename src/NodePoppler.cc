@@ -16,9 +16,9 @@
 #include <QtCore/QFile>
 #include <QtGui/QImage>
 #include <QtCore/QMutex>
-#include <QRunnable>
-#include <QSemaphore>
-#include <QThreadPool>
+#include <QtCore/QRunnable>
+#include <QtCore/QSemaphore>
+#include <QtCore/QThreadPool>
 
 #include "NodePoppler.h"    // NOLINT(build/include)
 

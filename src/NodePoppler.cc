@@ -15,7 +15,7 @@
 #include <QtCore/QBuffer>
 #include <QtCore/QFile>
 #include <QtGui/QImage>
-#include <QMutex>
+#include <QtCore/QMutex>
 #include <QRunnable>
 #include <QSemaphore>
 #include <QThreadPool>

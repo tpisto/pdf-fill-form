@@ -15,10 +15,10 @@
 #include <QtCore/QBuffer>
 #include <QtCore/QFile>
 #include <QtGui/QImage>
-#include <QMutex>
-#include <QRunnable>
-#include <QSemaphore>
-#include <QThreadPool>
+#include <QtCore/QMutex>
+#include <QtCore/QRunnable>
+#include <QtCore/QSemaphore>
+#include <QtCore/QThreadPool>
 
 #include "NodePoppler.h"    // NOLINT(build/include)
 

@@ -168,6 +168,7 @@ v4.0.0 (14.12.2017)
 - Mario Ferreira
 - Mihai Saru @MitzaCoder
 - Albert Astals Cid @tsdgeos
+- Florian Bischoff @florianbepunkt
 
 ## License
 MIT  

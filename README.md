@@ -138,6 +138,10 @@ I mostly recommand to install this package to have better support with fonts :
 $ sudo apt-get install poppler-data
 ```
 
+### Windows 
+
+Not currently supported
+
 ## Todo
 * Tests
 * Refactoring

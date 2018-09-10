@@ -17,10 +17,10 @@
   "gypfile": true,
   "main": "./lib/pdf-fill-form.js",
   "engines": {
-    "node": ">4.4.0"
+    "node": ">8.0.0"
   },
   "dependencies": {
-    "nan": "~2.4.0"
+    "nan": "^2.11.0"
   },
   "devDependencies": {},
   "optionalDependencies": {}

@@ -4,13 +4,13 @@ PDF Fill Form (**pdf-fill-form**) is Node.js native C++ library for filling PDF 
 Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
 ## Features
 
-* __NEW version 4.1.0 : Support for Node 10 (by @florianbepunkt)
+* **NEW version 4.1.0** : Support for Node 10 (by @florianbepunkt)
 
-* Version 4.0.0__: Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
+* Version 4.0.0: Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
 
-* Version 3.0.0__: Updated QT library to version 5 (by Rob Davarnia @robdvr). 
+* Version 3.0.0: Updated QT library to version 5 (by Rob Davarnia @robdvr). 
 
-* Version 2.0.0__: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0, v6.9.1
+* Version 2.0.0: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0, v6.9.1
 
 * Supports reading and writing the following PDF form field types: TextField, Checkbox, Radio button
 

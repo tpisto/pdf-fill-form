@@ -129,9 +129,18 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document, const struct Wri
   double maxWidth = 0;
   double maxHeight = 0;
 
-  int n = document->numPages();
+  int numPages = document->numPages();
+  int startPage = params.startPage;
+  int endPage = (params.endPage != -1) ? params.endPage + 1 : numPages;
+  if ((startPage < 0) || (startPage >= numPages)) {
+    startPage = 0;
+  }
+  if ((endPage <= startPage) || (endPage > numPages)) {
+    endPage = numPages;
+  }
+  bool isMultipage = ((endPage - startPage) > 1);
 
-  for (int i = 0; i < n; i += 1) {
+  for (int i = startPage; i < endPage; i += 1) {
     Poppler::Page *page = document->page(i);
 
     QSizeF size = page->pageSizeF();
@@ -160,13 +169,12 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document, const struct Wri
   QSemaphore pagesSemaphore;
   QHash<int, QPair<QBuffer *, cairo_surface_t *>> pages;
 
-  for (int i = 0; i < n; i += 1) {
+  for (int i = startPage; i < endPage; i += 1) {
     auto task = new RenderToBufferRunnable(document, i, params.scale_factor, &pages, &pagesMutex, &pagesSemaphore);
     tp.start(task);
-
   }
 
-  for (int i = 0; i < n; i += 1) {
+  for (int i = startPage; i < endPage; i += 1) {
     pagesMutex.lock();
     QBuffer *pageImage = pages[i].first;
     cairo_surface_t *drawImageSurface = pages[i].second;
@@ -185,7 +193,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document, const struct Wri
     cairo_surface_destroy(drawImageSurface);
 
     // Create new page if multipage document
-    if (n > 0) {
+    if (isMultipage) {
       cairo_surface_show_page(surface);
       if (cr != NULL) {
         cairo_destroy(cr);
@@ -201,7 +209,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document, const struct Wri
   // Close Cairo
   cairo_destroy(cr);
   cairo_surface_finish(surface);
-  cairo_surface_destroy (surface);
+  cairo_surface_destroy(surface);
 }
 
 WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args) {
@@ -211,6 +219,8 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
   int nCores = 1;
   double scale_factor = 0.2;
   bool antialiasing = false;
+  int startPage = 0;
+  int endPage = -1;
 
   String::Utf8Value sourcePdfFileNameParam(args[0]->ToString());
   string sourcePdfFileName = string(*sourcePdfFileNameParam);
@@ -223,6 +233,8 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
     Local<String> coresStr = Nan::New("cores").ToLocalChecked();
     Local<String> scaleStr = Nan::New("scale").ToLocalChecked();
     Local<String> antialiasStr = Nan::New("antialias").ToLocalChecked();
+    Local<String> startPageStr = Nan::New("startPage").ToLocalChecked();
+    Local<String> endPageStr = Nan::New("endPage").ToLocalChecked();
 
     parameters = args[2]->ToObject();
 
@@ -246,6 +258,16 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
     if (antialiasParam->IsBoolean()) {
       antialiasing = antialiasParam->BooleanValue();
     }
+
+    Local<Value> startPageParam = Nan::Get(parameters, startPageStr).ToLocalChecked();
+    if (startPageParam->IsInt32()) {
+      startPage = startPageParam->Int32Value();
+    }
+
+    Local<Value> endPageParam = Nan::Get(parameters, endPageStr).ToLocalChecked();
+    if (endPageParam->Int32Value()) {
+      endPage = endPageParam->Int32Value();
+    }
   }
 
   // Convert form fields to c++ map
@@ -260,6 +282,8 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
   params.cores = nCores;
   params.scale_factor = scale_factor;
   params.antialiasing = antialiasing;
+  params.startPage = startPage;
+  params.endPage = endPage;
   return params;
 }
 

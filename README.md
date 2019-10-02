@@ -23,6 +23,7 @@ Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is us
 
 ## Examples
 ### Using promises
+Read from file
 ```javascript
 var pdfFillForm = require('pdf-fill-form');
 
@@ -33,6 +34,20 @@ pdfFillForm.read('test.pdf')
 	console.log(err);
 });
 ```
+
+Read from file buffer
+```javascript
+var pdfFillForm = require('pdf-fill-form');
+
+pdfFillForm.readBuffer(fs.readFileSync('test.pdf'))
+.then(function(result) {
+    console.log(result);
+}, function(err) {
+	console.log(err);
+});
+```
+
+Write from file
 ```javascript
 var pdfFillForm = require('pdf-fill-form');
 var fs = require('fs');
@@ -48,7 +63,24 @@ pdfFillForm.write('test.pdf', { "myField": "myField fill value" }, { "save": "pd
 }, function(err) {
   	console.log(err);
 });
+```
 
+Write from file buffer
+```javascript
+var pdfFillForm = require('pdf-fill-form');
+var fs = require('fs');
+
+pdfFillForm.writeBuffer(fs.readFileSync('test.pdf'), { "myField": "myField fill value" }, { "save": "pdf", 'cores': 4, 'scale': 0.2, 'antialias': true } )
+.then(function(result) {
+	fs.writeFile("test123.pdf", result, function(err) {
+		if(err) {
+	   		return console.log(err);
+	   	}
+	   	console.log("The file was saved!");
+	}); 
+}, function(err) {
+  	console.log(err);
+});
 ```
 ### Using callbacks
 To **read** all form fields:  
@@ -138,10 +170,6 @@ I mostly recommand to install this package to have better support with fonts :
 $ sudo apt-get install poppler-data
 ```
 
-### Windows 
-
-Not currently supported
-
 ## Todo
 * Tests
 * Refactoring
@@ -149,18 +177,14 @@ Not currently supported
 
 ## Changelog (from 24.5.2017 ->)
 
-v4.1.0 (10.9.2018) 
- - Support for Node 10 (by @florianbepunkt)
-
-v4.0.0 (14.12.2017)
-- #45 Set radio button "value" to the poppler button state (by Albert Astals Cid @tsdgeos)
-- Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
+v3.2.0 (24.5.2017)
+- Support for radio buttons (by Matt Cherry @mttchrry)
 
 v3.3.0 (14.12.2017)
 - #49 Set radio button "value" to the poppler button state (by Mihai Saru @MitzaCoder)
 
-v3.2.0 (24.5.2017)
-- Support for radio buttons (by Matt Cherry @mttchrry)
+v4.0.0 (14.12.2017)
+- #45 Set radio button "value" to the poppler button state (by Albert Astals Cid @tsdgeos)
 
 ## Authors
 - [Tommi Pisto](https://github.com/tpisto)

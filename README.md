@@ -177,14 +177,18 @@ $ sudo apt-get install poppler-data
 
 ## Changelog (from 24.5.2017 ->)
 
-v3.2.0 (24.5.2017)
-- Support for radio buttons (by Matt Cherry @mttchrry)
+v4.1.0 (10.9.2018) 
+ - Support for Node 10 (by @florianbepunkt)
+
+v4.0.0 (14.12.2017)
+- #45 Set radio button "value" to the poppler button state (by Albert Astals Cid @tsdgeos)
+- Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
 
 v3.3.0 (14.12.2017)
 - #49 Set radio button "value" to the poppler button state (by Mihai Saru @MitzaCoder)
 
-v4.0.0 (14.12.2017)
-- #45 Set radio button "value" to the poppler button state (by Albert Astals Cid @tsdgeos)
+v3.2.0 (24.5.2017)
+- Support for radio buttons (by Matt Cherry @mttchrry)
 
 ## Authors
 - [Tommi Pisto](https://github.com/tpisto)

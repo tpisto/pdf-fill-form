@@ -10,8 +10,14 @@ NAN_MODULE_INIT(InitAll) {
   Nan::Set(target, Nan::New("readSync").ToLocalChecked(),
     Nan::GetFunction(Nan::New<FunctionTemplate>(ReadSync)).ToLocalChecked());
 
+  Nan::Set(target, Nan::New("readBufferSync").ToLocalChecked(),
+    Nan::GetFunction(Nan::New<FunctionTemplate>(ReadBufferSync)).ToLocalChecked());
+
   Nan::Set(target, Nan::New("writeSync").ToLocalChecked(),
     Nan::GetFunction(Nan::New<FunctionTemplate>(WriteSync)).ToLocalChecked());
+
+  Nan::Set(target, Nan::New("writeBufferSync").ToLocalChecked(),
+    Nan::GetFunction(Nan::New<FunctionTemplate>(WriteBufferSync)).ToLocalChecked());
 
   Nan::Set(target, Nan::New("writeAsync").ToLocalChecked(),
     Nan::GetFunction(Nan::New<FunctionTemplate>(WriteAsync)).ToLocalChecked());

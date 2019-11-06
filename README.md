@@ -2,9 +2,10 @@
 PDF Fill Form (**pdf-fill-form**) is Node.js native C++ library for filling PDF forms. Created PDF file is returned back as Node.js Buffer object for further processing or saving - *whole process is done in memory*. Library offers methods to return filled PDF also as PDF file where pages are converted to images.
 
 Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
+
 ## Features
 
-* Version v4.2.0: New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).
+* Version v4.2.0: New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo). Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon).
 
 * Version 4.1.0: Support for Node 10 (by @florianbepunkt)
 
@@ -183,9 +184,11 @@ Not currently supported
 
 ## Changelog (from 24.5.2017 ->)
 
-v4.2.0 (x.x.x)
-- New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).
 
+v4.2.0 (6.11.2019)
+- New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).
+- Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon)
+ 
 v4.1.0 (10.9.2018)
 - Support for Node 10 (by @florianbepunkt)
 
@@ -217,6 +220,7 @@ v3.2.0 (24.5.2017)
 - Albert Astals Cid @tsdgeos
 - Florian Bischoff @florianbepunkt
 - Derick Naef @ochimo
+- Dustin Harmon @dfharmon
 
 ## License
 MIT  

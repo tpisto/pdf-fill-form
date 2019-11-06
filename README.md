@@ -4,7 +4,9 @@ PDF Fill Form (**pdf-fill-form**) is Node.js native C++ library for filling PDF 
 Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
 ## Features
 
-* **NEW version 4.1.0** : Support for Node 10 (by @florianbepunkt)
+* Version v4.2.0: New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).
+
+* Version 4.1.0: Support for Node 10 (by @florianbepunkt)
 
 * Version 4.0.0: Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
 
@@ -170,6 +172,10 @@ I mostly recommand to install this package to have better support with fonts :
 $ sudo apt-get install poppler-data
 ```
 
+### Windows
+
+Not currently supported
+
 ## Todo
 * Tests
 * Refactoring
@@ -177,8 +183,11 @@ $ sudo apt-get install poppler-data
 
 ## Changelog (from 24.5.2017 ->)
 
-v4.1.0 (10.9.2018) 
- - Support for Node 10 (by @florianbepunkt)
+v4.2.0 (x.x.x)
+- New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).
+
+v4.1.0 (10.9.2018)
+- Support for Node 10 (by @florianbepunkt)
 
 v4.0.0 (14.12.2017)
 - #45 Set radio button "value" to the poppler button state (by Albert Astals Cid @tsdgeos)
@@ -207,9 +216,10 @@ v3.2.0 (24.5.2017)
 - Mihai Saru @MitzaCoder
 - Albert Astals Cid @tsdgeos
 - Florian Bischoff @florianbepunkt
+- Derick Naef @ochimo
 
 ## License
 MIT  
 
-NOTE ABOUT LIBRARY DEPENDENCIES!   
+NOTE ABOUT LIBRARY DEPENDENCIES!
 *Poppler has* ***GPL*** *license.* Cairo has LGPL.

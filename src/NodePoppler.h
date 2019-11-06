@@ -17,6 +17,8 @@ struct WriteFieldsParams {
   int cores;
   double scale_factor;
   bool antialiasing;
+  int startPage;
+  int endPage;
 };
 
 NAN_METHOD(ReadSync);

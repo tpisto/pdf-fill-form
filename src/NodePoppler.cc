@@ -212,7 +212,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document, const struct Wri
   cairo_surface_destroy(surface);
 }
 
-WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args) {
+WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args, bool isBuffer) {
   Local<Object> parameters;
   string saveFormat = "imgpdf";
   map<string, string> fields;
@@ -221,9 +221,20 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
   bool antialiasing = false;
   int startPage = 0;
   int endPage = -1;
+  string sourcePdfFileName = "";
+  QByteArray sourceBuffer;
 
-  String::Utf8Value sourcePdfFileNameParam(args[0]->ToString());
-  string sourcePdfFileName = string(*sourcePdfFileNameParam);
+  if(isBuffer) {
+    Local<Object> bufferObj = args[0]->ToObject();
+    char* bufferData = node::Buffer::Data(bufferObj);
+    size_t bufferLength = node::Buffer::Length(bufferObj);
+
+
+    sourceBuffer = sourceBuffer.append(bufferData, bufferLength);
+  } else {
+    String::Utf8Value sourcePdfFileNameParam(args[0]->ToString());
+    sourcePdfFileName = string(*sourcePdfFileNameParam);
+  }
 
   Local<Object> changeFields = args[1]->ToObject();
 
@@ -284,24 +295,35 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
   params.antialiasing = antialiasing;
   params.startPage = startPage;
   params.endPage = endPage;
+  params.sourceBuffer = sourceBuffer;
   return params;
 }
 
 // Pdf creator that is not dependent on V8 internals (safe at async?)
-QBuffer *writePdfFields(const struct WriteFieldsParams &params) {
+QBuffer *writePdfFields(const struct WriteFieldsParams &params, bool isBuffer) {
 
   ostringstream ss;
-  // If source file does not exist, throw error and return false
-  if (!fileExists(params.sourcePdfFileName)) {
-    ss << "File \"" << params.sourcePdfFileName << "\" does not exist";
-    throw ss.str();
-  }
+  Poppler::Document *document;
 
-  // Open document and return false and throw error if something goes wrong
-  Poppler::Document *document = Poppler::Document::load(QString::fromStdString(params.sourcePdfFileName));
-  if (document == NULL) {
-    ss << "Error occurred when reading \"" << params.sourcePdfFileName << "\"";
-    throw ss.str();
+  if(isBuffer) {
+    document = Poppler::Document::loadFromData(params.sourceBuffer);
+    if (document == NULL) {
+      ss << "Error occurred when reading buffer";
+      throw ss.str();
+    }
+  } else {
+    // If source file does not exist, throw error and return false
+    if (!fileExists(params.sourcePdfFileName)) {
+      ss << "File \"" << params.sourcePdfFileName << "\" does not exist";
+      throw ss.str();
+    }
+
+    // Open document and return false and throw error if something goes wrong
+    document = Poppler::Document::load(QString::fromStdString(params.sourcePdfFileName));
+    if (document == NULL) {
+      ss << "Error occurred when reading \"" << params.sourcePdfFileName << "\"";
+      throw ss.str();
+    }
   }
 
   // Fill form
@@ -395,41 +417,8 @@ QBuffer *writePdfFields(const struct WriteFieldsParams &params) {
   return bufferDevice;
 }
 
-
-//***********************************
-//
-// Node.js methods
-//
-//***********************************
-
-// Read PDF form fields
-NAN_METHOD(ReadSync) {
-
-  // expect a number as the first argument
-  Nan::Utf8String *fileName = new Nan::Utf8String(info[0]);
-  ostringstream ss;
-  int n = 0;
-
-  // If file does not exist, throw error and return false
-  if (!fileExists(**fileName)) {
-    ss << "File \"" << **fileName << "\" does not exist";
-    Nan::ThrowError(Nan::New<String>(ss.str()).ToLocalChecked());
-    info.GetReturnValue().Set(Nan::False());
-  }
-
-  // Open document and return false and throw error if something goes wrong
-  Poppler::Document *document = Poppler::Document::load(**fileName);
-  if (document != NULL) {
-    // Get field list
-    n = document->numPages();
-  } else {
-    ss << "Error occurred when reading \"" << **fileName << "\"";
-    Nan::ThrowError(Nan::New<String>(ss.str()).ToLocalChecked());
-    info.GetReturnValue().Set(Nan::False());
-  }
-
-  delete fileName;
-
+Local<Array> readPdfFields(Poppler::Document *document) {
+  int n = document->numPages();
   // Store field value objects to v8 array
   Local<Array> fieldArray = Nan::New<Array>();
   int fieldNum = 0;
@@ -517,7 +506,71 @@ NAN_METHOD(ReadSync) {
     delete page;
   }
 
-  info.GetReturnValue().Set(fieldArray);
+  return fieldArray;
+}
+
+//***********************************
+//
+// Node.js methods
+//
+//***********************************
+
+// Read PDF form fields
+NAN_METHOD(ReadBufferSync) {
+  Local<Object> bufferObj = info[0]->ToObject();
+  char* bufferData = node::Buffer::Data(bufferObj);
+  size_t bufferLength = node::Buffer::Length(bufferObj);
+
+  ostringstream ss;
+  int n = 0;
+
+  QByteArray buffer;
+  buffer = buffer.append(bufferData, bufferLength);
+  Poppler::Document *document = Poppler::Document::loadFromData(buffer);
+
+  if (document != NULL) {
+    // Get field list
+    n = document->numPages();
+  } else {
+    ss << "Error occurred when reading buffer\"";
+    Nan::ThrowError(Nan::New<String>(ss.str()).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::False());
+  }
+
+  info.GetReturnValue().Set(readPdfFields(document));
+
+  delete document;
+}
+
+// Read PDF form fields
+NAN_METHOD(ReadSync) {
+
+  // expect a number as the first argument
+  Nan::Utf8String *fileName = new Nan::Utf8String(info[0]);
+  ostringstream ss;
+  int n = 0;
+
+  // If file does not exist, throw error and return false
+  if (!fileExists(**fileName)) {
+    ss << "File \"" << **fileName << "\" does not exist";
+    Nan::ThrowError(Nan::New<String>(ss.str()).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::False());
+  }
+
+  // Open document and return false and throw error if something goes wrong
+  Poppler::Document *document = Poppler::Document::load(**fileName);
+  if (document != NULL) {
+    // Get field list
+    n = document->numPages();
+  } else {
+    ss << "Error occurred when reading \"" << **fileName << "\"";
+    Nan::ThrowError(Nan::New<String>(ss.str()).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::False());
+  }
+
+  delete fileName;
+
+  info.GetReturnValue().Set(readPdfFields(document));
 
   delete document;
 }
@@ -532,6 +585,28 @@ NAN_METHOD(WriteSync) {
   try
   {
     QBuffer *buffer = writePdfFields(params);
+    Local<Object> returnPdf = Nan::CopyBuffer((char *)buffer->data().data(), buffer->size()).ToLocalChecked();
+    buffer->close();
+    delete buffer;
+    info.GetReturnValue().Set(returnPdf);
+  }
+  catch (string error)
+  {
+    Nan::ThrowError(Nan::New<String>(error).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::Null());
+  }
+}
+
+// Write PDF form fields
+NAN_METHOD(WriteBufferSync) {
+
+  // Check and return parameters given at JavaScript function call
+  WriteFieldsParams params = v8ParamsToCpp(info, true);
+
+  // Create and return pdf
+  try
+  {
+    QBuffer *buffer = writePdfFields(params, true);
     Local<Object> returnPdf = Nan::CopyBuffer((char *)buffer->data().data(), buffer->size()).ToLocalChecked();
     buffer->close();
     delete buffer;

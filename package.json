@@ -9,7 +9,7 @@
     "qt5",
     "cairo"
   ],
-  "version": "3.2.1",
+  "version": "5.0.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/tpisto/pdf-fill-form.git"

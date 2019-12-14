@@ -2,13 +2,18 @@
 PDF Fill Form (**pdf-fill-form**) is Node.js native C++ library for filling PDF forms. Created PDF file is returned back as Node.js Buffer object for further processing or saving - *whole process is done in memory*. Library offers methods to return filled PDF also as PDF file where pages are converted to images.
 
 Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
+
 ## Features
 
-* __NEW version 4.0.0__: Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
+* Version v5.0.0: New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo). Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon).
 
-* Version 3.0.0__: Updated QT library to version 5 (by Rob Davarnia @robdvr). 
+* Version 4.1.0: Support for Node 10 (by @florianbepunkt)
 
-* Version 2.0.0__: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0, v6.9.1
+* Version 4.0.0: Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
+
+* Version 3.0.0: Updated QT library to version 5 (by Rob Davarnia @robdvr). 
+
+* Version 2.0.0: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0, v6.9.1
 
 * Supports reading and writing the following PDF form field types: TextField, Checkbox, Radio button
 
@@ -21,6 +26,7 @@ Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is us
 
 ## Examples
 ### Using promises
+Read from file
 ```javascript
 var pdfFillForm = require('pdf-fill-form');
 
@@ -31,6 +37,20 @@ pdfFillForm.read('test.pdf')
 	console.log(err);
 });
 ```
+
+Read from file buffer
+```javascript
+var pdfFillForm = require('pdf-fill-form');
+
+pdfFillForm.readBuffer(fs.readFileSync('test.pdf'))
+.then(function(result) {
+    console.log(result);
+}, function(err) {
+	console.log(err);
+});
+```
+
+Write from file
 ```javascript
 var pdfFillForm = require('pdf-fill-form');
 var fs = require('fs');
@@ -46,7 +66,24 @@ pdfFillForm.write('test.pdf', { "myField": "myField fill value" }, { "save": "pd
 }, function(err) {
   	console.log(err);
 });
+```
 
+Write from file buffer
+```javascript
+var pdfFillForm = require('pdf-fill-form');
+var fs = require('fs');
+
+pdfFillForm.writeBuffer(fs.readFileSync('test.pdf'), { "myField": "myField fill value" }, { "save": "pdf", 'cores': 4, 'scale': 0.2, 'antialias': true } )
+.then(function(result) {
+	fs.writeFile("test123.pdf", result, function(err) {
+		if(err) {
+	   		return console.log(err);
+	   	}
+	   	console.log("The file was saved!");
+	}); 
+}, function(err) {
+  	console.log(err);
+});
 ```
 ### Using callbacks
 To **read** all form fields:  
@@ -136,6 +173,10 @@ I mostly recommand to install this package to have better support with fonts :
 $ sudo apt-get install poppler-data
 ```
 
+### Windows
+
+Not currently supported
+
 ## Todo
 * Tests
 * Refactoring
@@ -143,14 +184,23 @@ $ sudo apt-get install poppler-data
 
 ## Changelog (from 24.5.2017 ->)
 
-v3.2.0 (24.5.2017)
-- Support for radio buttons (by Matt Cherry @mttchrry)
+
+v5.0.0 (6.11.2019)
+- New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).
+- Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon)
+ 
+v4.1.0 (10.9.2018)
+- Support for Node 10 (by @florianbepunkt)
+
+v4.0.0 (14.12.2017)
+- #45 Set radio button "value" to the poppler button state (by Albert Astals Cid @tsdgeos)
+- Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
 
 v3.3.0 (14.12.2017)
 - #49 Set radio button "value" to the poppler button state (by Mihai Saru @MitzaCoder)
 
-v4.0.0 (14.12.2017)
-- #45 Set radio button "value" to the poppler button state (by Albert Astals Cid @tsdgeos)
+v3.2.0 (24.5.2017)
+- Support for radio buttons (by Matt Cherry @mttchrry)
 
 ## Authors
 - [Tommi Pisto](https://github.com/tpisto)
@@ -168,9 +218,12 @@ v4.0.0 (14.12.2017)
 - Mario Ferreira
 - Mihai Saru @MitzaCoder
 - Albert Astals Cid @tsdgeos
+- Florian Bischoff @florianbepunkt
+- Derick Naef @ochimo
+- Dustin Harmon @dfharmon
 
 ## License
 MIT  
 
-NOTE ABOUT LIBRARY DEPENDENCIES!   
+NOTE ABOUT LIBRARY DEPENDENCIES!
 *Poppler has* ***GPL*** *license.* Cairo has LGPL.

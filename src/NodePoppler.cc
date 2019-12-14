@@ -403,8 +403,6 @@ QBuffer *writePdfFields(const struct WriteFieldsParams &params, bool isBuffer) {
               break;
           }
         }
-
-        field->setReadOnly(true);
       }
     }
 

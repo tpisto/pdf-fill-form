@@ -172,7 +172,7 @@ Not currently supported
 * Refactoring
 * Support for other form field types than CheckBox, Radio button and TextField
 
-## Changelog (from 24.5.2017 ->)
+## Changelog
 
 
 v5.0.0 (6.11.2019)

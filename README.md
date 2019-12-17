@@ -5,7 +5,7 @@ Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is us
 
 ## Features
 
-* Version v5.0.0: New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo). Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon).
+* Version v5.0.0: New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo). Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon). Support for Node 13 (by @florianbepunkt)
 
 * Version 4.1.0: Support for Node 10 (by @florianbepunkt)
 

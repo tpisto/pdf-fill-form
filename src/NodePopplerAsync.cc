@@ -44,7 +44,8 @@ class PdfWriteWorker : public Nan::AsyncWorker {
       };
       buffer->close();
       delete buffer;
-      callback->Call(2, argv);
+      Nan::AsyncResource resource("pdf-fill-form:worker.HandleOKCallback");
+      callback->Call(2, argv, &resource);
     }
 
   private:

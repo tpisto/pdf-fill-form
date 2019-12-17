@@ -5,16 +5,6 @@ Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is us
 
 ## Features
 
-* Version v5.0.0: New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo). Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon). Support for Node 13 (by @florianbepunkt)
-
-* Version 4.1.0: Support for Node 10 (by @florianbepunkt)
-
-* Version 4.0.0: Added feature allowing for parallelization of the imgpdf feature, also allows for settings scale and whether antialiasing should be used (by Albert Astals Cid @tsdgeos).
-
-* Version 3.0.0: Updated QT library to version 5 (by Rob Davarnia @robdvr). 
-
-* Version 2.0.0: Updated nan library to version 2.4.0. Now __pdf-fill-form__ works also with all latest node.js versions. Tested using 0.12.0, v4.4.7, v5.2.0, v6.3.0, v6.8.0, v6.9.1
-
 * Supports reading and writing the following PDF form field types: TextField, Checkbox, Radio button
 
 * You can write following files:

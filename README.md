@@ -188,7 +188,8 @@ Not currently supported
 v5.0.0 (6.11.2019)
 - New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).
 - Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon)
- 
+- Support for Node 13 (by @florianbepunkt)
+
 v4.1.0 (10.9.2018)
 - Support for Node 10 (by @florianbepunkt)
 

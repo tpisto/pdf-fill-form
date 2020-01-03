@@ -216,7 +216,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document, const struct Wri
 
 WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args, bool isBuffer) {
   Isolate* isolate = args.GetIsolate();
-  
+
   Local<Object> parameters;
   string saveFormat = "imgpdf";
   map<string, string> fields;
@@ -270,7 +270,11 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
 
     Local<Value> antialiasParam = Nan::Get(parameters, antialiasStr).ToLocalChecked();
     if (antialiasParam->IsBoolean()) {
+      #if (NODE_MODULE_VERSION > NODE_11_0_MODULE_VERSION)
       antialiasing = antialiasParam->BooleanValue(isolate);
+      #else
+      antialiasing = antialiasParam->BooleanValue(isolate->GetCurrentContext()).ToChecked();
+      #endif
     }
 
     Local<Value> startPageParam = Nan::Get(parameters, startPageStr).ToLocalChecked();

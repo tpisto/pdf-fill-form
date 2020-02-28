@@ -163,6 +163,26 @@ I mostly recommand to install this package to have better support with fonts :
 $ sudo apt-get install poppler-data
 ```
 
+### Linux - CENTOS 8
+
+First, enable the PowerTools repository:
+```
+$ yum config-manager --set-enabled PowerTools
+```
+
+Install the dependencies :
+```
+$ dnf install poppler-qt5-devel cairo cairo-devel
+```
+
+Then install the package using npm or yarn :
+```
+$ npm install pdf-fill-form
+```
+```
+$ yarn add pdf-fill-form
+```
+
 ### Windows
 
 Not currently supported

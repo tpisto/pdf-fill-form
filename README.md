@@ -120,25 +120,46 @@ For example if you have a radio button for gender called "Gender1" with options 
 
 ## Installation
 
-### OS X
+### macOS
+
 Preferable method to install library dependencies is via [Homebrew](http://brew.sh/)
 
-```
-$ brew install qt5 cairo poppler --with-qt5
-```
-After dependencies are successfully installed, you can install the library:
+**First, make sure the XCode Command Line Tools are installed correctly**
 
 ```
+xcode-select --install
+```
+
+**Then install the [Poppler](https://formulae.brew.sh/formula/poppler) and [Cairo](https://formulae.brew.sh/formula/cairo) formulae using ```brew```**
+
+_NB: Poppler contains all the necessary ```qt``` version 5 depencencies._
+
+```
+brew install poppler cairo
+```
+
+**Also export environnement variables used by the compiler during the ```pdf-fill-form``` installation**
+```
+export LDFLAGS=-L/usr/local/opt/qt/lib
+export CPPFLAGS=-I/usr/local/opt/qt/include
+export PKG_CONFIG_PATH=/usr/local/opt/qt/lib/pkgconfig
+```
+
+_NB: You may also append the above ```export``` commands to your `~/.bash_profile` or `~/.zshrc` file for persistency._
+
+**Finally, install the package using npm or yarn**
+```
 $ npm install pdf-fill-form
-```  
+```
+```
+$ yarn add pdf-fill-form
+```
+
+#### Troubleshooting
+
 > Homebrew users who get error regarding xcb-shm  
 > The fix is to add this to your bash profile / environment: export PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig
 
-If you still run into issues, or had an existing qt installed try to force link it:
-```
-brew linkapps qt5
-brew link --force qt5
-```
 
 ### Linux - Ubuntu (trusty)
 ```

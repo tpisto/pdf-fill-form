@@ -130,6 +130,12 @@ Preferable method to install library dependencies is via [Homebrew](http://brew.
 xcode-select --install
 ```
 
+**Also make sure pkg-config is installed correctly**
+
+```
+brew install pkg-config
+```
+
 **Then install the [Poppler](https://formulae.brew.sh/formula/poppler) and [Cairo](https://formulae.brew.sh/formula/cairo) formulae using ```brew```**
 
 _NB: Poppler contains all the necessary ```qt``` version 5 depencencies._

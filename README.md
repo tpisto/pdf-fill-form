@@ -144,7 +144,7 @@ _NB: Poppler contains all the necessary ```qt``` version 5 depencencies._
 brew install poppler cairo
 ```
 
-**Also export environnement variables used by the compiler during the ```pdf-fill-form``` installation**
+**Also export environment variables used by the compiler during the ```pdf-fill-form``` installation**
 ```
 export LDFLAGS=-L/usr/local/opt/qt/lib
 export CPPFLAGS=-I/usr/local/opt/qt/include

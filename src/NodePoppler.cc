@@ -26,7 +26,6 @@ using namespace std;
 using v8::Number;
 using v8::String;
 using v8::Local;
-using v8::Object;
 using v8::Array;
 using v8::Value;
 using v8::Boolean;
@@ -217,7 +216,7 @@ void createImgPdf(QBuffer *buffer, Poppler::Document *document, const struct Wri
 WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args, bool isBuffer) {
   Isolate* isolate = args.GetIsolate();
 
-  Local<Object> parameters;
+  v8::Local<v8::Object> parameters;
   string saveFormat = "imgpdf";
   map<string, string> fields;
   int nCores = 1;
@@ -229,7 +228,7 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
   QByteArray sourceBuffer;
 
   if(isBuffer) {
-    Local<Object> bufferObj = args[0]->ToObject(Nan::GetCurrentContext()).ToLocalChecked();
+    v8::Local<v8::Object> bufferObj = args[0]->ToObject(Nan::GetCurrentContext()).ToLocalChecked();
     char* bufferData = node::Buffer::Data(bufferObj);
     size_t bufferLength = node::Buffer::Length(bufferObj);
 
@@ -239,36 +238,36 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
     sourcePdfFileName = string(*utf8_value);
   }
 
-  Local<Object> changeFields = args[1]->ToObject(Nan::GetCurrentContext()).ToLocalChecked();
+  v8::Local<v8::Object> changeFields = args[1]->ToObject(Nan::GetCurrentContext()).ToLocalChecked();
 
   // Check if any configuration parameters
   if (args.Length() > 2) {
-    Local<String> saveStr = Nan::New("save").ToLocalChecked();
-    Local<String> coresStr = Nan::New("cores").ToLocalChecked();
-    Local<String> scaleStr = Nan::New("scale").ToLocalChecked();
-    Local<String> antialiasStr = Nan::New("antialias").ToLocalChecked();
-    Local<String> startPageStr = Nan::New("startPage").ToLocalChecked();
-    Local<String> endPageStr = Nan::New("endPage").ToLocalChecked();
+    Local<v8::String> saveStr = Nan::New("save").ToLocalChecked();
+    Local<v8::String> coresStr = Nan::New("cores").ToLocalChecked();
+    Local<v8::String> scaleStr = Nan::New("scale").ToLocalChecked();
+    Local<v8::String> antialiasStr = Nan::New("antialias").ToLocalChecked();
+    Local<v8::String> startPageStr = Nan::New("startPage").ToLocalChecked();
+    Local<v8::String> endPageStr = Nan::New("endPage").ToLocalChecked();
 
     parameters = args[2]->ToObject(Nan::GetCurrentContext()).ToLocalChecked();
 
-    Local<Value> saveParam = Nan::Get(parameters, saveStr).ToLocalChecked();
+    v8::Local<v8::Value> saveParam = Nan::Get(parameters, saveStr).ToLocalChecked();
     if (!saveParam->IsUndefined()) {
       Nan::Utf8String saveFormatParam(saveParam);
       saveFormat = string(*saveFormatParam);
     }
 
-    Local<Value> coresParam = Nan::Get(parameters, coresStr).ToLocalChecked();
+    v8::Local<v8::Value> coresParam = Nan::Get(parameters, coresStr).ToLocalChecked();
     if (coresParam->IsInt32()) {
       nCores = Nan::To<int32_t>(coresParam).FromJust();
     }
 
-    Local<Value> scaleParam = Nan::Get(parameters, scaleStr).ToLocalChecked();
+    v8::Local<v8::Value> scaleParam = Nan::Get(parameters, scaleStr).ToLocalChecked();
     if (scaleParam->IsNumber()) {
       scale_factor = scaleParam->NumberValue(Nan::GetCurrentContext()).ToChecked();
     }
 
-    Local<Value> antialiasParam = Nan::Get(parameters, antialiasStr).ToLocalChecked();
+    v8::Local<v8::Value> antialiasParam = Nan::Get(parameters, antialiasStr).ToLocalChecked();
     if (antialiasParam->IsBoolean()) {
       #if (NODE_MODULE_VERSION > NODE_11_0_MODULE_VERSION)
       antialiasing = antialiasParam->BooleanValue(isolate);
@@ -277,19 +276,19 @@ WriteFieldsParams v8ParamsToCpp(const Nan::FunctionCallbackInfo<v8::Value>& args
       #endif
     }
 
-    Local<Value> startPageParam = Nan::Get(parameters, startPageStr).ToLocalChecked();
+    v8::Local<v8::Value> startPageParam = Nan::Get(parameters, startPageStr).ToLocalChecked();
     if (startPageParam->IsInt32()) {
       startPage = startPageParam->Int32Value(Nan::GetCurrentContext()).ToChecked();
     }
 
-    Local<Value> endPageParam = Nan::Get(parameters, endPageStr).ToLocalChecked();
+    v8::Local<v8::Value> endPageParam = Nan::Get(parameters, endPageStr).ToLocalChecked();
     if (endPageParam->Int32Value(Nan::GetCurrentContext()).ToChecked()  ) {
       endPage = endPageParam->Int32Value(Nan::GetCurrentContext()).ToChecked();
     }
   }
 
   // Convert form fields to c++ map
-  Local<Array> fieldArray = Local<Array>::Cast(Nan::GetPropertyNames(changeFields).ToLocalChecked());
+  v8::Local<v8::Array> fieldArray = Local<Array>::Cast(Nan::GetPropertyNames(changeFields).ToLocalChecked());
 
   for (unsigned int i = 0; i < fieldArray->Length(); i++ ) {
     if (Nan::Has(fieldArray, i).FromJust()) {
@@ -434,7 +433,7 @@ QBuffer *writePdfFields(const struct WriteFieldsParams &params, bool isBuffer) {
 Local<Array> readPdfFields(Poppler::Document *document) {
   int n = document->numPages();
   // Store field value objects to v8 array
-  Local<Array> fieldArray = Nan::New<Array>();
+  v8::Local<v8::Array> fieldArray = Nan::New<v8::Array>();
   int fieldNum = 0;
 
   for (int i = 0; i < n; i += 1) {
@@ -446,18 +445,18 @@ Local<Array> readPdfFields(Poppler::Document *document) {
       if (!field->isReadOnly() && field->isVisible()) {
 
         // Make JavaScript object out of the fieldnames
-        Local<Object> obj = Nan::New<Object>();
-        Nan::Set(obj, Nan::New<String>("name").ToLocalChecked(), Nan::New<String>(field->fullyQualifiedName().toStdString()).ToLocalChecked());
-        Nan::Set(obj, Nan::New<String>("page").ToLocalChecked(), Nan::New<Number>(i));
+        v8::Local<v8::Object> obj = Nan::New<v8::Object>();
+        Nan::Set(obj, Nan::New<v8::String>("name").ToLocalChecked(), Nan::New<v8::String>(field->fullyQualifiedName().toStdString()).ToLocalChecked());
+        Nan::Set(obj, Nan::New<v8::String>("page").ToLocalChecked(), Nan::New<v8::Number>(i));
 
         // ! TODO ! Note. Poppler doesn't support checkboxes with hashtag names (aka using exportValue).
         string fieldType;
         // Set default value undefined
-        Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), Nan::Undefined());
+        Nan::Set(obj, Nan::New<v8::String>("value").ToLocalChecked(), Nan::Undefined());
         Poppler::FormFieldButton *myButton;
         Poppler::FormFieldChoice *myChoice;
 
-        Nan::Set(obj, Nan::New<String>("id").ToLocalChecked(), Nan::New<Number>(field->id()));
+        Nan::Set(obj, Nan::New<v8::String>("id").ToLocalChecked(), Nan::New<v8::Number>(field->id()));
         switch (field->type()) {
 
           // FormButton
@@ -531,7 +530,7 @@ Local<Array> readPdfFields(Poppler::Document *document) {
 
 // Read PDF form fields
 NAN_METHOD(ReadBufferSync) {
-  Local<Object> bufferObj = info[0]->ToObject(Nan::GetCurrentContext()).ToLocalChecked();
+  v8::Local<v8::Object> bufferObj = info[0]->ToObject(Nan::GetCurrentContext()).ToLocalChecked();
   char* bufferData = node::Buffer::Data(bufferObj);
   size_t bufferLength = node::Buffer::Length(bufferObj);
 
@@ -599,7 +598,7 @@ NAN_METHOD(WriteSync) {
   try
   {
     QBuffer *buffer = writePdfFields(params);
-    Local<Object> returnPdf = Nan::CopyBuffer((char *)buffer->data().data(), buffer->size()).ToLocalChecked();
+    v8::Local<v8::Object> returnPdf = Nan::CopyBuffer((char *)buffer->data().data(), buffer->size()).ToLocalChecked();
     buffer->close();
     delete buffer;
     info.GetReturnValue().Set(returnPdf);
@@ -621,7 +620,7 @@ NAN_METHOD(WriteBufferSync) {
   try
   {
     QBuffer *buffer = writePdfFields(params, true);
-    Local<Object> returnPdf = Nan::CopyBuffer((char *)buffer->data().data(), buffer->size()).ToLocalChecked();
+    v8::Local<v8::Object> returnPdf = Nan::CopyBuffer((char *)buffer->data().data(), buffer->size()).ToLocalChecked();
     buffer->close();
     delete buffer;
     info.GetReturnValue().Set(returnPdf);

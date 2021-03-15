@@ -259,6 +259,7 @@ v3.2.0 (24.5.2017)
 - Florian Bischoff @florianbepunkt
 - Derick Naef @ochimo
 - Dustin Harmon @dfharmon
+- Szabo Bogdan @gedaiu
 
 ## License
 MIT  

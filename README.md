@@ -221,6 +221,8 @@ Not currently supported
 
 ## Changelog
 
+v5.1.0 (15.3.2021)
+- Fix the v8 namespace (by @gedaiu)
 
 v5.0.0 (6.11.2019)
 - New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).

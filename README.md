@@ -1,11 +1,11 @@
 <img src="http://res.cloudinary.com/tpisto/image/upload/v1428317033/pdf-fill-form-logo_rlfj7o.png" width="400"><br/>
 PDF Fill Form (**pdf-fill-form**) is Node.js native C++ library for filling PDF forms. Created PDF file is returned back as Node.js Buffer object for further processing or saving - *whole process is done in memory*. Library offers methods to return filled PDF also as PDF file where pages are converted to images.
 
-Libary uses internally Poppler QT5 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
+Library uses internally Poppler QT5 for PDF form reading and filling. Cairo is used for PDF creation from page images (when parameter { "save": "imgpdf" } is used). 
 
 ## Features
 
-* Supports reading and writing the following PDF form field types: TextField, Checkbox, Radio button
+* Supports reading and writing the following PDF form field types: TextField, Checkbox, and Radio button
 
 * You can write following files:
 	* PDF
@@ -192,7 +192,7 @@ $ sudo apt-get install poppler-data
 
 ### Linux - CENTOS 8
 
-First, enable the PowerTools repository:
+First, enable the PowerTools repository :
 ```
 $ yum config-manager --set-enabled PowerTools
 ```
@@ -217,7 +217,7 @@ Not currently supported
 ## Todo
 * Tests
 * Refactoring
-* Support for other form field types than CheckBox, Radio button and TextField
+* Support for other form field types than TextField, Checkbox, and Radio button
 
 ## Changelog
 
@@ -225,8 +225,8 @@ v5.1.0 (15.3.2021)
 - Fix the v8 namespace (by @gedaiu)
 
 v5.0.0 (6.11.2019)
-- New options startPage and endPage for the imgpdf feature to limit which pages are generated.  Page numbers indexed from 0 (by Derick Naef @ochimo).
-- Allow source to come in a a buffer an not a filename (by Dustin Harmon @dfharmon)
+- New options startPage and endPage for the imgpdf feature to limit which pages are generated. Page numbers indexed from 0 (by Derick Naef @ochimo).
+- Allow source to come in a buffer an not a filename (by Dustin Harmon @dfharmon)
 - Support for Node 13 (by @florianbepunkt)
 
 v4.1.0 (10.9.2018)
